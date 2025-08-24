@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     position: 'absolute',
     right: 30,
-    top: 25,
   },
   clientInfo: {
     marginTop: 20,
