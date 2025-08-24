@@ -7,20 +7,21 @@ import ArticlesPagination from "@/components/articles-pagination";
 export default async function ArticlesPage({
   searchParams,
 }: {
-  searchParams: { 
+  searchParams: Promise<{ 
     page?: string; 
     search?: string; 
     category?: string; 
     sort?: string; 
-  };
+  }>;
 }) {
   const ITEMS_PER_PAGE = 12;
   
   // Récupération des paramètres de recherche
-  const page = parseInt(searchParams.page || '1');
-  const search = searchParams.search || '';
-  const category = searchParams.category || '';
-  const sort = searchParams.sort || 'date';
+  const resolvedSearchParams = await searchParams;
+  const page = parseInt(resolvedSearchParams.page || '1');
+  const search = resolvedSearchParams.search || '';
+  const category = resolvedSearchParams.category || '';
+  const sort = resolvedSearchParams.sort || 'date';
   
   // Calcul de l'offset pour la pagination
   const skip = (page - 1) * ITEMS_PER_PAGE;
