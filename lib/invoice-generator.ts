@@ -320,6 +320,8 @@ function generateInvoiceNumber(): string {
 
 export async function getInvoicePDF(invoiceId: string): Promise<Buffer | null> {
   try {
+    console.log(`🔍 Génération PDF pour la facture: ${invoiceId}`);
+    
     const invoice = await prisma.invoice.findUnique({
       where: { id: invoiceId },
       include: {
@@ -333,6 +335,25 @@ export async function getInvoicePDF(invoiceId: string): Promise<Buffer | null> {
     });
 
     if (!invoice) {
+      console.error(`❌ Facture non trouvée: ${invoiceId}`);
+      return null;
+    }
+
+    console.log(`📋 Facture trouvée:`, {
+      invoiceNumber: invoice.invoiceNumber,
+      userId: invoice.userId,
+      userEmail: invoice.user?.email,
+      itemsCount: invoice.items?.length || 0
+    });
+
+    // Validation des données
+    if (!invoice.user) {
+      console.error('❌ Utilisateur non trouvé pour la facture');
+      return null;
+    }
+
+    if (!invoice.items || invoice.items.length === 0) {
+      console.error('❌ Aucun article trouvé pour la facture');
       return null;
     }
 
@@ -342,16 +363,27 @@ export async function getInvoicePDF(invoiceId: string): Promise<Buffer | null> {
       userEmail: invoice.user.email,
       userName: `${invoice.user.firstName || ''} ${invoice.user.lastName || ''}`.trim() || invoice.user.username,
       articleId: invoice.items[0]?.articleId || '',
-      articleTitle: invoice.items[0]?.article.title || '',
+      articleTitle: invoice.items[0]?.article?.title || 'Article inconnu',
       amount: invoice.totalAmount,
       currency: invoice.currency,
       stripePaymentIntentId: invoice.stripeInvoiceId || '',
       paidAt: invoice.paidAt || new Date()
     };
 
-    return await generateInvoicePDF(invoiceData);
+    console.log(`📄 Données de facture préparées:`, invoiceData);
+
+    const pdfBuffer = await generateInvoicePDF(invoiceData);
+    
+    if (!pdfBuffer) {
+      console.error('❌ Échec de la génération du PDF');
+      return null;
+    }
+
+    console.log(`✅ PDF généré avec succès, taille: ${pdfBuffer.length} bytes`);
+    return pdfBuffer;
+    
   } catch (error) {
-    console.error('Erreur lors de la génération du PDF:', error);
+    console.error('❌ Erreur lors de la génération du PDF:', error);
     return null;
   }
 } 

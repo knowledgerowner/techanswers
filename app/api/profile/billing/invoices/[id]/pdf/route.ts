@@ -31,14 +31,18 @@ export async function GET(
     }
 
     // Générer le PDF
+    console.log(`🔄 Génération du PDF pour la facture ${id}...`);
     const pdfBuffer = await getInvoicePDF(id);
 
     if (!pdfBuffer) {
+      console.error(`❌ Échec de la génération du PDF pour la facture ${id}`);
       return NextResponse.json(
-        { error: 'Erreur lors de la génération du PDF' },
+        { error: 'Erreur lors de la génération du PDF. Veuillez réessayer.' },
         { status: 500 }
       );
     }
+
+    console.log(`✅ PDF généré avec succès pour la facture ${id}, taille: ${pdfBuffer.length} bytes`);
 
     // Retourner le PDF
     return new Response(new Uint8Array(pdfBuffer), {
