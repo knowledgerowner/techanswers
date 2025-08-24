@@ -36,9 +36,10 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     position: 'absolute',
     right: 30,
-    top: 30,
+    top: 50,
   },
   clientInfo: {
+    marginTop: 20,
     marginBottom: 30,
   },
   invoiceTable: {
