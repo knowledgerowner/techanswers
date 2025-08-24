@@ -21,8 +21,6 @@ export default function robots(): MetadataRoute.Robots {
           '/profile/*',
           '/login',
           '/register',
-          '/_next/*',
-          '/favicon.ico',
         ],
       },
       {
