@@ -1,25 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
-
-// Fonction pour vérifier si l'utilisateur est super admin
-async function requireSuperAdminAuth(request: NextRequest) {
-  try {
-    const payload = verifyToken(request);
-    if (!payload) {
-      return NextResponse.json({ error: 'Token invalide' }, { status: 401 });
-    }
-
-    if (!payload.isSuperAdmin) {
-      return NextResponse.json({ error: 'Droits super administrateur requis' }, { status: 403 });
-    }
-
-    return payload;
-  } catch (error) {
-    console.error('Erreur d\'authentification:', error);
-    return NextResponse.json({ error: 'Erreur d\'authentification' }, { status: 500 });
-  }
-}
+import { requireAdminAsync } from '@/lib/auth';
 
 // PATCH - Basculer le statut administrateur
 export async function PATCH(
@@ -28,9 +9,17 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const admin = await requireSuperAdminAuth(request);
+    const admin = await requireAdminAsync(request);
     if (admin instanceof NextResponse) {
       return admin;
+    }
+
+    // Vérifier que l'utilisateur est super admin pour cette action
+    if (!admin.isSuperAdmin) {
+      return NextResponse.json(
+        { error: 'Droits super administrateur requis pour modifier les statuts admin' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendReplyEmail } from '@/lib/email';
-import { verifyToken } from '@/lib/auth';
-
-// Fonction pour vérifier si l'utilisateur est admin
-async function requireAdmin(request: NextRequest) {
-  try {
-    const payload = verifyToken(request);
-    if (!payload) {
-      return NextResponse.json({ error: 'Token invalide' }, { status: 401 });
-    }
-
-    if (!payload.isAdmin && !payload.isSuperAdmin) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    return payload;
-  } catch (error) {
-    console.error('Erreur d\'authentification:', error);
-    return NextResponse.json({ error: 'Erreur d\'authentification' }, { status: 500 });
-  }
-}
+import { requireAdminAsync } from '@/lib/auth';
 
 // POST - Ajouter une réponse à un contact
 export async function POST(
@@ -29,7 +10,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAsync(request);
     if (admin instanceof NextResponse) {
       return admin;
     }
@@ -80,6 +61,12 @@ export async function POST(
       });
     }
 
+    // Récupérer le nom d'utilisateur de l'admin
+    const adminUser = await prisma.user.findUnique({
+      where: { id: admin.userId },
+      select: { username: true },
+    });
+
     // Envoyer l'email de réponse
     try {
       const emailResult = await sendReplyEmail(
@@ -91,7 +78,7 @@ export async function POST(
         },
         {
           content: content.trim(),
-          adminName: admin.username,
+          adminName: adminUser?.username || 'Admin',
         }
       );
 

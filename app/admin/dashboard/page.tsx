@@ -76,7 +76,7 @@ export default function DashboardPage() {
         <div className="bg-card border rounded-lg p-6">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-orange-500" />
-            <span className="text-sm font-medium text-muted-foreground">Vues</span>
+            <span className="text-sm font-medium text-muted-foreground">Demandes de contact</span>
           </div>
           <div className="mt-2 text-2xl font-bold">{stats.contacts}</div>
           <div className="text-xs text-muted-foreground">Messages reçus</div>

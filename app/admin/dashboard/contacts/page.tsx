@@ -30,9 +30,7 @@ interface Reply {
   id: string;
   content: string;
   createdAt: string;
-  user: {
-    username: string;
-  };
+  userId: string;
 }
 
 export default function ContactsPage() {
@@ -65,10 +63,20 @@ export default function ContactsPage() {
         const data = await response.json();
         setContacts(data.contacts);
       } else {
-        console.error("Erreur lors du chargement des contacts");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Erreur lors du chargement des contacts:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        
+        // Afficher une notification d'erreur à l'utilisateur
+        if (errorData.error) {
+          console.error("Détails de l'erreur:", errorData.error);
+        }
       }
     } catch (error) {
-      console.error("Erreur:", error);
+      console.error("Erreur réseau:", error);
     } finally {
       setLoading(false);
     }
@@ -332,10 +340,12 @@ export default function ContactsPage() {
                                       <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                                           <span className="text-primary-foreground text-xs font-medium">
-                                            {reply.user.username.charAt(0).toUpperCase()}
+                                            {reply.userId ? 'U' : 'A'}
                                           </span>
                                         </div>
-                                        <p className="font-medium text-sm">{reply.user.username}</p>
+                                        <p className="font-medium text-sm">
+                                          {reply.userId ? `Utilisateur ${reply.userId.slice(-4)}` : 'Anonyme'}
+                                        </p>
                                       </div>
                                       <p className="text-xs text-muted-foreground">
                                         {new Date(reply.createdAt).toLocaleString('fr-FR')}

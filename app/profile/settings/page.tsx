@@ -12,9 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   User, 
   Mail, 
-  Globe, 
   Building, 
-  Briefcase,
   Save,
   Eye,
   EyeOff,
@@ -148,6 +146,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
+          confirmPassword: passwordData.confirmPassword,
         }),
       });
 

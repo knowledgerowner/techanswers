@@ -11,7 +11,6 @@ import {
   Eye, 
   Calendar,
   Euro,
-  FileText,
   ShoppingCart,
   Clock,
   CheckCircle,
