@@ -1,8 +1,8 @@
 'use client';
 
 import { usePurchasedArticles } from '@/lib/hooks/usePurchasedArticles';
-import PremiumArticleCard from "@/components/premium-article-card";
-import ArticleCard from "@/components/article-card";
+import PremiumArticleCard from '@/components/premium-article-card';
+import ArticleCard from '@/components/article-card';
 
 interface Article {
   id: string;
@@ -13,35 +13,26 @@ interface Article {
   isMarketing: boolean;
   isPremium: boolean;
   premiumPrice: number | null;
-  categoryIds: string[];
-  createdAt: string;
+  createdAt: Date;
   user: {
     username: string;
   };
 }
 
-interface ArticlesGridProps {
+interface CategoriesArticlesWrapperProps {
   articles: Article[];
 }
 
-export default function ArticlesGrid({ articles }: ArticlesGridProps) {
+export default function CategoriesArticlesWrapper({ articles }: CategoriesArticlesWrapperProps) {
   const { hasPurchased } = usePurchasedArticles();
 
-  if (articles.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Aucun article trouvé</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {articles.map((article) => (
-        <div key={article.id}>
+        <div key={article.id} className="hover:scale-105 transition-transform duration-200">
           {article.isPremium ? (
             <div className="h-[500px]">
-              <PremiumArticleCard
+              <PremiumArticleCard 
                 article={{
                   id: article.id,
                   title: article.title,
@@ -49,21 +40,23 @@ export default function ArticlesGrid({ articles }: ArticlesGridProps) {
                   slug: article.slug,
                   imageUrl: article.imageUrl || undefined,
                   premiumPrice: article.premiumPrice || 0,
-                  isPremium: article.isPremium,
+                  isPremium: article.isPremium
                 }}
                 hasPurchased={hasPurchased(article.id)}
               />
             </div>
           ) : (
-            <ArticleCard article={{
-              id: article.id,
-              title: article.title,
-              excerpt: article.excerpt,
-              slug: article.slug,
-              imageUrl: article.imageUrl,
-              createdAt: article.createdAt,
-              user: article.user,
-            }} />
+            <ArticleCard 
+              article={{
+                id: article.id,
+                title: article.title,
+                excerpt: article.excerpt,
+                slug: article.slug,
+                imageUrl: article.imageUrl,
+                createdAt: article.createdAt.toISOString(),
+                user: article.user
+              }}
+            />
           )}
         </div>
       ))}

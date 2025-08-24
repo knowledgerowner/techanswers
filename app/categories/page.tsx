@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import ArticleCard from "@/components/article-card";
-import PremiumArticleCard from "@/components/premium-article-card";
+import CategoriesArticlesWrapper from "@/components/categories-articles-wrapper";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star } from "lucide-react";
 
@@ -96,40 +95,7 @@ export default async function CategoriesPage() {
               Ces contenus premium vous offrent des insights approfondis et des perspectives uniques.
             </p>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {marketingArticles.map((article) => (
-                <div key={article.id} className="hover:scale-105 transition-transform duration-200">
-                  {article.isPremium ? (
-                    <div className="h-[500px]">
-                      <PremiumArticleCard 
-                        article={{
-                          id: article.id,
-                          title: article.title,
-                          excerpt: article.excerpt || undefined,
-                          slug: article.slug,
-                          imageUrl: article.imageUrl || undefined,
-                          premiumPrice: article.premiumPrice || 0,
-                          isPremium: article.isPremium
-                        }}
-                        hasPurchased={false}
-                      />
-                    </div>
-                  ) : (
-                    <ArticleCard 
-                      article={{
-                        id: article.id,
-                        title: article.title,
-                        excerpt: article.excerpt,
-                        slug: article.slug,
-                        imageUrl: article.imageUrl,
-                        createdAt: article.createdAt.toISOString(),
-                        user: article.user
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+            <CategoriesArticlesWrapper articles={marketingArticles} />
 
             <div className="text-center mt-8">
               <Link href="/articles?isMarketing=true">

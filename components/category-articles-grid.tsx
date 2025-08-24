@@ -1,5 +1,6 @@
 'use client';
 
+import { usePurchasedArticles } from '@/lib/hooks/usePurchasedArticles';
 import PremiumArticleCard from '@/components/premium-article-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,6 @@ interface Article {
   user: {
     username: string;
   };
-  hasPurchased?: boolean; // Ajout de la propriété hasPurchased
 }
 
 interface CategoryArticlesGridProps {
@@ -32,8 +32,7 @@ interface CategoryArticlesGridProps {
 }
 
 export default function CategoryArticlesGrid({ articles, totalPages, currentPage, categorySlug }: CategoryArticlesGridProps) {
-  // Supprimer la dépendance à usePurchasedArticles pour un rendu immédiat
-  // Les articles premium seront gérés côté client si nécessaire
+  const { hasPurchased } = usePurchasedArticles();
 
   return (
     <>
@@ -52,7 +51,7 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                     premiumPrice: article.premiumPrice || 0,
                     isPremium: article.isPremium,
                   }}
-                  hasPurchased={article.hasPurchased || false}
+                  hasPurchased={hasPurchased(article.id)}
                 />
               </div>
             ) : (

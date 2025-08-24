@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   ArrowLeft as ArrowLeftIcon,
 } from 'lucide-react';
-import CategoryArticlesGridWrapper from '@/components/category-articles-grid-wrapper';
+import CategoryArticlesGrid from '@/components/category-articles-grid';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -174,7 +174,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
         {/* Articles Grid */}
         {articles.length > 0 ? (
-          <CategoryArticlesGridWrapper
+          <CategoryArticlesGrid
             articles={articles}
             totalPages={totalPages}
             currentPage={pageNumber}

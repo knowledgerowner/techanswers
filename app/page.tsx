@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe } from "@/components/ui/globe";
-import PremiumArticleCard from "@/components/premium-article-card";
-import ArticleCard from "@/components/article-card";
+
 import NoScriptFallback from "@/components/noscript-fallback";
+
 import { prisma } from "@/lib/prisma";
 import NewsletterForm from "@/components/newsletter-form";
+import HomeArticlesWrapper from "@/components/home-articles-wrapper";
 
 
 
@@ -162,90 +163,20 @@ export default async function Home() {
             Voir tous →
           </Link>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {featuredArticles.map((article) => (
-            <div key={article.id}>
-              {article.isPremium ? (
-                <div className="h-[500px]">
-                                      <PremiumArticleCard
-                      article={{
-                        id: article.id,
-                        title: article.title,
-                        excerpt: article.excerpt || undefined,
-                        slug: article.slug,
-                        imageUrl: article.imageUrl || undefined,
-                        premiumPrice: article.premiumPrice || 0,
-                        isPremium: article.isPremium,
-                      }}
-                      hasPurchased={false}
-                    />
-                </div>
-              ) : (
-                <ArticleCard article={{
-                  id: article.id,
-                  title: article.title,
-                  excerpt: article.excerpt,
-                  slug: article.slug,
-                  imageUrl: article.imageUrl,
-                  createdAt: article.createdAt.toISOString(),
-                  user: article.user,
-                }} />
-              )}
-            </div>
-          ))}
-        </div>
+        <HomeArticlesWrapper
+          articles={featuredArticles}
+          title=""
+          description=""
+        />
       </section>
 
       {/* Recent Articles - Derniers articles */}
-      <section className="mt-16 w-full max-w-80/100 mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight mb-4">
-            Derniers Articles
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Découvrez nos 15 derniers articles sur les technologies les plus récentes
-          </p>
-        </div>
-        
-        {recentArticles.length > 0 ? (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {recentArticles.map((article) => (
-              <div key={article.id}>
-                {article.isPremium ? (
-                  <div className="h-[500px]">
-                                      <PremiumArticleCard
-                    article={{
-                      id: article.id,
-                      title: article.title,
-                      excerpt: article.excerpt || undefined,
-                      slug: article.slug,
-                      imageUrl: article.imageUrl || undefined,
-                      premiumPrice: article.premiumPrice || 0,
-                      isPremium: article.isPremium,
-                    }}
-                    hasPurchased={false}
-                  />
-                  </div>
-                ) : (
-                  <ArticleCard article={{
-                    id: article.id,
-                    title: article.title,
-                    excerpt: article.excerpt,
-                    slug: article.slug,
-                    imageUrl: article.imageUrl,
-                    createdAt: article.createdAt.toISOString(),
-                    user: article.user,
-                  }} />
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Aucun article à afficher</p>
-          </div>
-        )}
-      </section>
+      <HomeArticlesWrapper
+        articles={recentArticles}
+        title="Derniers Articles"
+        description="Découvrez nos 15 derniers articles sur les technologies les plus récentes"
+        maxItems={15}
+      />
 
       {/* Newsletter CTA */}
       <section id="newsletter" className="mt-16 mb-8 overflow-hidden rounded-2xl border bg-gradient-to-br from-background to-secondary max-w-7xl mx-auto">

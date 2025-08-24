@@ -29,9 +29,14 @@ export default function PremiumArticleCard({ article, hasPurchased = false }: Pr
   const { user } = useAuth();
   const router = useRouter();
 
+  // Debug: afficher les valeurs reçues
+  console.log('🔍 PremiumArticleCard - Article:', article.id, 'hasPurchased:', hasPurchased, 'user:', user?.username);
+
   // Vérifier si l'utilisateur est admin ou super admin
   const isAdmin = user?.isAdmin || user?.isSuperAdmin;
   const showAsFree = isAdmin || hasPurchased;
+
+  console.log('🔍 PremiumArticleCard - showAsFree:', showAsFree, 'isAdmin:', isAdmin);
 
   useEffect(() => {
     // Charger Stripe côté client
