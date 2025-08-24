@@ -1,0 +1,8 @@
+---
+description: Règles quand on développe avec Next.JS
+globs:
+alwaysApply: true
+---
+
+- Fais toujours les requêtes facon Next.JS 15+ avec Promise et params awaited
+- si tu vois des erreurs de linter concernant les modeles prisma dans les fichier ts et tsx, c'est de la synchronisation vscode mais ca marche quand même les schema sont généré et db push donc continue

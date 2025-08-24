@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AdminSidebar } from "@/components/admin-sidebar";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
@@ -32,23 +30,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  BarChart3, 
   FileText, 
-  Users, 
-  Mail, 
-  Settings, 
-  CreditCard, 
   Bell, 
-  Search,
-  Menu,
-  X,
-  LogOut,
   User,
-  Shield,
-  TrendingUp,
-  Calendar,
   Tag,
-  Newspaper,
   Plus,
   Edit,
   Trash2,
@@ -57,14 +42,17 @@ import {
   Star,
   MoreHorizontal,
   Filter,
-  Download
+  DollarSign
 } from "lucide-react";
+
+
 
 interface User {
   id: string;
   username: string;
   email: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 interface Article {
@@ -76,6 +64,10 @@ interface Article {
   imageUrl?: string;
   isPublished: boolean;
   isMarketing: boolean;
+  isPremium: boolean;
+  isBilled: boolean;
+  premiumPrice?: number;
+  billedPrice?: number;
   isAuto: boolean;
   seoTitle?: string;
   seoDesc?: string;
@@ -102,7 +94,6 @@ interface Category {
 export default function ArticlesPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState({
@@ -114,27 +105,27 @@ export default function ArticlesPage() {
   const [filters, setFilters] = useState({
     search: "",
     status: "all",
-    category: ""
+    category: "all"
   });
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user) {
       loadArticles();
       loadCategories();
     }
-  }, [user, pagination.page, filters]);
+  }, [user, pagination.page, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/auth/me");
       if (response.ok) {
         const userData = await response.json();
-        if (userData.isAdmin) {
+        if (userData.isAdmin || userData.isSuperAdmin) {
           setUser(userData);
         } else {
           router.push("/admin/login");
@@ -143,6 +134,7 @@ export default function ArticlesPage() {
         router.push("/admin/login");
       }
     } catch (error) {
+      console.error("Erreur lors de la vérification de l'authentification:", error);
       router.push("/admin/login");
     } finally {
       setLoading(false);
@@ -179,15 +171,6 @@ export default function ArticlesPage() {
       }
     } catch (error) {
       console.error("Erreur lors du chargement des catégories:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/admin/login");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
@@ -267,82 +250,9 @@ export default function ArticlesPage() {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <AdminSidebar className="hidden lg:flex" />
-
-      {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed left-0 top-0 h-full w-3/4 border-r bg-background">
-          <AdminSidebar className="w-full" />
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="flex h-[60px] items-center gap-4 border-b bg-background px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Rechercher..."
-                className="w-full rounded-md border border-input bg-background px-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt={user.username} />
-                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.username}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Paramètres</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Déconnexion</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
@@ -354,10 +264,26 @@ export default function ArticlesPage() {
                   Gérez vos articles et contenus
                 </p>
               </div>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push("/admin/dashboard/articles/published")}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Publiés
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push("/admin/dashboard/articles/drafts")}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Brouillons
+                </Button>
               <Button onClick={() => router.push("/admin/dashboard/articles/new")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nouvel article
               </Button>
+              </div>
             </div>
 
             {/* Filtres */}
@@ -398,7 +324,7 @@ export default function ArticlesPage() {
                         <SelectValue placeholder="Toutes les catégories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Toutes les catégories</SelectItem>
+                        <SelectItem value="all">Toutes les catégories</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name} ({category.articleCount})
@@ -407,6 +333,52 @@ export default function ArticlesPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                
+                {/* Bouton de test des notifications */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Test des notifications</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Testez le système de notifications pour les utilisateurs abonnés aux catégories sélectionnées
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const selectedCategory = filters.category;
+                      if (selectedCategory === 'all') {
+                        alert('Veuillez sélectionner une catégorie spécifique pour tester les notifications');
+                        return;
+                      }
+                      
+                      try {
+                        const response = await fetch('/api/test/article-notification', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ categoryIds: [selectedCategory] })
+                        });
+                        
+                        if (response.ok) {
+                          const result = await response.json();
+                          alert(`Test terminé !\n\nAbonnements trouvés: ${result.subscriptionsFound}\nUtilisateurs notifiés: ${result.users.length}\n\nVérifiez la console pour plus de détails.`);
+                          console.log('🔍 [TEST] Résultat complet:', result);
+                        } else {
+                          const error = await response.json();
+                          alert(`Erreur: ${error.error}`);
+                        }
+                      } catch (error) {
+                        console.error('Erreur lors du test:', error);
+                        alert('Erreur lors du test des notifications');
+                      }
+                    }}
+                    disabled={filters.category === 'all'}
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    Tester les notifications
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -478,6 +450,18 @@ export default function ArticlesPage() {
                                 Marketing
                               </Badge>
                             )}
+                            {article.isPremium && (
+                              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+                                <DollarSign className="mr-1 h-3 w-3" />
+                                Premium
+                              </Badge>
+                            )}
+                            {article.isBilled && (
+                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                <Tag className="mr-1 h-3 w-3" />
+                                Backlink
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -494,6 +478,10 @@ export default function ArticlesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/articles/${article.id}`)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Voir
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/articles/${article.id}/edit`)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Modifier
                               </DropdownMenuItem>

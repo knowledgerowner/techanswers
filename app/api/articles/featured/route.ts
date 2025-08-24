@@ -3,13 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
+    // Récupérer les articles marketing (à la une)
     const featuredArticles = await prisma.article.findMany({
       where: {
         isPublished: true,
-        OR: [
-          { isMarketing: true },
-          { isAuto: false } // Articles non automatiques en priorité
-        ]
+        isMarketing: true,
       },
       select: {
         id: true,
@@ -18,6 +16,8 @@ export async function GET() {
         slug: true,
         imageUrl: true,
         isMarketing: true,
+        isPremium: true,
+        premiumPrice: true,
         categoryIds: true,
         createdAt: true,
         user: {
@@ -26,16 +26,13 @@ export async function GET() {
           },
         },
       },
-      orderBy: [
-        { isMarketing: 'desc' }, // Marketing en premier
-        { createdAt: 'desc' }    // Puis par date
-      ],
-      take: 6, // Limite à 6 articles
+      orderBy: { createdAt: 'desc' },
+      take: 3, // Limiter à 3 articles à la une
     });
 
     return NextResponse.json(featuredArticles);
   } catch (error) {
-    console.error('Erreur lors de la récupération des articles:', error);
+    console.error('Erreur lors de la récupération des articles à la une:', error);
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminAsync } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     // Vérifier que l'utilisateur est admin
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAsync(request);
     if (admin instanceof NextResponse) {
       return admin;
     }
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Construire les filtres
-    const where: any = {};
+    const where: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
     
     if (status === "blocked") {
       where.isBlocked = true;
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Vérifier que l'utilisateur est admin
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAsync(request);
     if (admin instanceof NextResponse) {
       return admin;
     }

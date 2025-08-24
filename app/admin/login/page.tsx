@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const [formData, setFormData] = useState({
@@ -14,12 +15,28 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockTimeLeft, setBlockTimeLeft] = useState(0);
+  const [attempts, setAttempts] = useState(0);
   const router = useRouter();
 
-  // Vérifier si l'utilisateur est bloqué au chargement
+  // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
-    checkBlockStatus();
-  }, []);
+    checkAuthStatus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData.isAdmin || userData.isSuperAdmin) {
+          router.push("/admin/dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'authentification:", error);
+      // L'utilisateur n'est pas connecté, continuer
+    }
+  };
 
   // Timer pour le décompte du blocage
   useEffect(() => {
@@ -28,32 +45,12 @@ export default function AdminLoginPage() {
         setBlockTimeLeft(blockTimeLeft - 1);
         if (blockTimeLeft - 1 === 0) {
           setIsBlocked(false);
+          setAttempts(0);
         }
       }, 1000);
       return () => clearTimeout(timer);
     }
   }, [blockTimeLeft]);
-
-  const checkBlockStatus = async () => {
-    try {
-      const response = await fetch("/api/auth/admin/check-block", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.isBlocked) {
-        setIsBlocked(true);
-        const timeLeft = Math.ceil((new Date(data.blockedUntil).getTime() - Date.now()) / 1000);
-        setBlockTimeLeft(Math.max(0, timeLeft));
-      }
-    } catch (err) {
-      console.error("Erreur lors de la vérification du blocage:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,19 +69,23 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push("/admin");
+        router.push("/admin/dashboard");
         router.refresh();
       } else {
         setError(data.error || "Erreur de connexion");
         
         // Si l'utilisateur est bloqué, mettre à jour l'état
-        if (data.isBlocked) {
+        if (response.status === 429) {
           setIsBlocked(true);
-          const timeLeft = Math.ceil((new Date(data.blockedUntil).getTime() - Date.now()) / 1000);
-          setBlockTimeLeft(Math.max(0, timeLeft));
+          setBlockTimeLeft(data.remainingTime || 300);
+          setAttempts(data.attempts || 0);
+        } else if (response.status === 401 || response.status === 403) {
+          // Incrémenter le compteur de tentatives
+          setAttempts(prev => prev + 1);
         }
       }
     } catch (err) {
+      console.error("Erreur lors de la connexion:", err);
       setError("Erreur de connexion");
     } finally {
       setIsLoading(false);
@@ -103,7 +104,7 @@ export default function AdminLoginPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-foreground">Administration</h1>
           <p className="mt-2 text-muted-foreground">
-            Accès sécurisé au panel d'administration
+            Accès sécurisé au panel d&apos;administration
           </p>
         </div>
 
@@ -111,7 +112,7 @@ export default function AdminLoginPage() {
           {isBlocked ? (
             <div className="text-center space-y-4">
               <div className="text-red-500 text-lg font-semibold">
-                Accès temporairement bloqué
+                🚨 Accès temporairement bloqué
               </div>
               <div className="text-muted-foreground">
                 Trop de tentatives de connexion échouées.
@@ -119,14 +120,19 @@ export default function AdminLoginPage() {
                 Réessayez dans : <span className="font-mono text-foreground">{formatTime(blockTimeLeft)}</span>
               </div>
               <div className="text-sm text-muted-foreground">
-                Pour des raisons de sécurité, votre accès a été temporairement suspendu.
+                Pour des raisons de sécurité, votre fingerprint et IP ont été temporairement bloqués.
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-md">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Note :</strong> Le blocage persiste même après actualisation de la page.
+                </p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
-                  Nom d'utilisateur
+                  Nom d&apos;utilisateur
                 </label>
                 <Input
                   id="username"
@@ -157,6 +163,11 @@ export default function AdminLoginPage() {
               {error && (
                 <div className="text-red-500 text-sm bg-red-50 dark:bg-red-950/20 p-3 rounded-md">
                   {error}
+                  {attempts > 0 && (
+                    <div className="mt-2 text-xs">
+                      Tentatives échouées : {attempts}/3
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -173,9 +184,9 @@ export default function AdminLoginPage() {
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            <a href="/" className="hover:text-foreground">
+            <Link href="/" className="hover:text-foreground">
               ← Retour au site
-            </a>
+            </Link>
           </p>
         </div>
       </div>

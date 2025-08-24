@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Mesh, SphereGeometry, MeshStandardMaterial, TextureLoader, Color, Vector2 } from "three";
+import { Mesh, TextureLoader, Color, Vector2 } from "three";
 import * as THREE from "three";
 
 export function Planet() {

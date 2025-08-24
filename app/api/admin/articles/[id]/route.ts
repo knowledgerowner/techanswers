@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { notifyArticlePublished } from "@/lib/notifications";
 
 // GET - Récupérer un article spécifique
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdmin(request);
@@ -13,8 +14,9 @@ export async function GET(
       return admin;
     }
 
+    const { id } = await params;
     const article = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         user: {
           select: {
@@ -47,7 +49,7 @@ export async function GET(
 // PATCH - Mettre à jour un article
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdmin(request);
@@ -55,6 +57,7 @@ export async function PATCH(
       return admin;
     }
 
+    const { id } = await params;
     const body = await request.json();
     const {
       title,
@@ -64,6 +67,10 @@ export async function PATCH(
       excerpt,
       isPublished,
       isMarketing,
+      isPremium,
+      isBilled,
+      premiumPrice,
+      billedPrice,
       isAuto,
       seoTitle,
       seoDesc,
@@ -74,7 +81,7 @@ export async function PATCH(
 
     // Vérifier si l'article existe
     const existingArticle = await prisma.article.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     });
 
     if (!existingArticle) {
@@ -100,7 +107,7 @@ export async function PATCH(
 
     // Mettre à jour l'article
     const updatedArticle = await prisma.article.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         title,
         content,
@@ -109,6 +116,10 @@ export async function PATCH(
         excerpt,
         isPublished,
         isMarketing,
+        isPremium,
+        isBilled,
+        premiumPrice,
+        billedPrice,
         isAuto,
         seoTitle,
         seoDesc,
@@ -127,6 +138,24 @@ export async function PATCH(
       }
     });
 
+    // Envoyer des notifications si l'article est publié et a des catégories
+    if (isPublished && categoryIds && categoryIds.length > 0) {
+      try {
+        console.log('📧 [ADMIN] Envoi de notifications pour article modifié:', updatedArticle.title);
+        await notifyArticlePublished({
+          articleId: updatedArticle.id,
+          articleTitle: updatedArticle.title,
+          articleSlug: updatedArticle.slug,
+          authorUsername: updatedArticle.user.username,
+          categoryIds: categoryIds
+        });
+        console.log('✅ [ADMIN] Notifications envoyées pour article modifié');
+      } catch (notificationError) {
+        console.error('❌ [ADMIN] Erreur lors de l\'envoi des notifications:', notificationError);
+        // Ne pas faire échouer la mise à jour de l'article si les notifications échouent
+      }
+    }
+
     return NextResponse.json({
       article: updatedArticle,
       message: "Article mis à jour avec succès"
@@ -144,7 +173,7 @@ export async function PATCH(
 // DELETE - Supprimer un article
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdmin(request);
@@ -152,9 +181,10 @@ export async function DELETE(
       return admin;
     }
 
+    const { id } = await params;
     // Vérifier si l'article existe
     const existingArticle = await prisma.article.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     });
 
     if (!existingArticle) {
@@ -166,7 +196,7 @@ export async function DELETE(
 
     // Supprimer l'article
     await prisma.article.delete({
-      where: { id: params.id }
+      where: { id: id }
     });
 
     return NextResponse.json({

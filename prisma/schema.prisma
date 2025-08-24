@@ -44,6 +44,32 @@ model User {
   email       String   @unique
   password    String
   isAdmin     Boolean  @default(false)
+  isSuperAdmin Boolean  @default(false)
+  hasPurchased String[] @db.ObjectId // IDs des articles achetés
+  
+  // Nouvelles propriétés pour les fonctionnalités avancées
+  firstName   String?
+  lastName    String?
+  bio         String?
+  avatarUrl   String?
+  website     String?
+  location    String?
+  company     String?  
+  jobTitle    String?
+  
+  // Sécurité et vérification
+  isEmailVerified Boolean @default(false)
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret String?
+  twoFactorBackupCodes String[] // Codes de secours
+  lastLoginAt DateTime?
+  loginAttempts Int @default(0)
+  lockedUntil DateTime?
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -54,7 +80,19 @@ model User {
   comments    Comment[]
   ratings     Rating[]
   pageViews   PageView[]
+  articleViews ArticleView[]
+  userSessions UserSession[]
   payments    Payment[]
+  notifications Notification[]
+  categorySubscriptions CategorySubscription[]
+  userPreferences UserPreferences?
+  notificationSettings NotificationSettings?
+  
+  // Nouvelles relations pour la sécurité et la facturation
+  twoFactorCodes TwoFactorCode[]
+  twoFactorSessions TwoFactorSession[]
+  invoices Invoice[]
+  purchaseHistory PurchaseHistory[]
 }
 
 enum ContactStatus {
@@ -107,6 +145,10 @@ model Article {
   excerpt       String?
   isPublished   Boolean  @default(false)
   isMarketing   Boolean  @default(false)
+  isPremium     Boolean  @default(false)
+  isBilled      Boolean  @default(false)
+  premiumPrice  Float?   @default(0)
+  billedPrice   Float?   @default(0)
 
   // Métadonnées SEO personnalisées
   seoTitle     String?
@@ -122,12 +164,18 @@ model Article {
   user        User     @relation(fields: [userId], references: [id])
   comments    Comment[]
   ratings     Rating[]
+  articleViews ArticleView[]
+  payments    Payment[]
   
   // Catégories référencées (liste d'ObjectId vers Category)
   categoryIds String[] @db.ObjectId
   
   // Pour récupérer spécifiquement les articles générés automatiquement
   isAuto      Boolean  @default(false)
+  
+  // Nouvelles relations
+  invoiceItems InvoiceItem[]
+  purchaseHistory PurchaseHistory[]
 }
 
 model Comment {
@@ -169,8 +217,18 @@ model Category {
   name        String   @unique
   slug        String   @unique
   description String?
+  
+  // Métadonnées SEO personnalisées
+  seoTitle     String?
+  seoDesc      String?
+  seoKeywords  String?
+  seoImg       String?
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  // Relations
+  subscriptions CategorySubscription[]
 }
 
 
@@ -203,7 +261,6 @@ model Newsletter {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([email])
   @@index([isActive])
 }
 
@@ -222,6 +279,11 @@ model PageView {
   country     String?
   city        String?
   
+  // Informations sur l'appareil
+  device      String?
+  browser     String?
+  os          String?
+  
   // Métriques
   timeOnPage  Int?     // Temps passé sur la page en secondes
   scrollDepth Int?     // Pourcentage de scroll (0-100)
@@ -237,6 +299,68 @@ model PageView {
   @@index([sessionId])
   @@index([userId])
   @@index([createdAt])
+}
+
+// Nouveau modèle pour les vues d'articles spécifiques
+model ArticleView {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  articleId   String   @db.ObjectId
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  // Informations sur la vue
+  sessionId   String   // Identifiant de session
+  userId      String?  @db.ObjectId // Utilisateur connecté (optionnel)
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  // Informations sur le visiteur
+  ip          String?
+  userAgent   String?
+  referrer    String?
+  
+  // Métriques spécifiques aux articles
+  timeOnPage  Int?     // Temps passé sur l'article en secondes
+  scrollDepth Int?     // Pourcentage de scroll (0-100)
+  readProgress Int?    // Pourcentage de lecture estimé (0-100)
+  
+  createdAt   DateTime @default(now())
+
+  @@index([articleId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Nouveau modèle pour les sessions utilisateur
+model UserSession {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId   String   @unique
+  userId      String?  @db.ObjectId // Utilisateur connecté (optionnel)
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  // Informations sur la session
+  ip          String?
+  userAgent   String?
+  referrer    String?
+  country     String?
+  city        String?
+  
+  // Métriques de session
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  duration    Int?     // Durée en secondes
+  pageViews   Int      @default(0)
+  
+  // Informations sur l'appareil
+  device      String?
+  browser     String?
+  os          String?
+  screenSize  String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([startTime])
 }
 
 model Payment {
@@ -256,16 +380,23 @@ model Payment {
   status          PaymentStatus
   description     String?
   
+  // Article acheté
+  articleId       String?  @db.ObjectId
+  article         Article? @relation(fields: [articleId], references: [id])
+  
   // Métadonnées
   metadata        Json?
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  
+  // Nouvelles relations
+  purchaseHistory PurchaseHistory[]
 
-  @@index([stripeSessionId])
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([articleId])
 }
 
 enum PaymentStatus {
@@ -273,4 +404,331 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
   CANCELED
+}
+
+// Nouveau modèle pour les notifications
+model Notification {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Contenu de la notification
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?    // Données supplémentaires (URLs, IDs, etc.)
+  
+  // État de la notification
+  isRead      Boolean  @default(false)
+  isArchived  Boolean  @default(false)
+  
+  // Métadonnées
+  priority    NotificationPriority @default(NORMAL)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// Nouveau modèle pour les préférences utilisateur
+model UserPreferences {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Préférences d'affichage
+  theme       String   @default("dark") // "light", "dark", "auto"
+  language    String   @default("fr")   // "fr", "en", "es"
+  timezone    String   @default("Europe/Paris")
+  
+  // Préférences de contenu
+  showPremiumContent Boolean @default(true)
+  autoPlayVideos    Boolean @default(false)
+  showComments      Boolean @default(true)
+  showRatings       Boolean @default(true)
+  
+  // Préférences de navigation
+  compactMode       Boolean @default(false)
+  showSidebar       Boolean @default(true)
+  showBreadcrumbs   Boolean @default(true)
+  
+  // Préférences de recherche
+  searchHistory     Boolean @default(true)
+  searchSuggestions Boolean @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Nouveau modèle pour les paramètres de notifications
+model NotificationSettings {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notifications par email
+  emailNotifications EmailNotificationSettings?
+  
+  // Notifications push (si implémenté plus tard)
+  pushNotifications Boolean @default(false)
+  
+  // Notifications in-app
+  inAppNotifications Boolean @default(true)
+  
+  // Notifications par type
+  newArticles       Boolean @default(true)
+  commentReplies    Boolean @default(true)
+  securityAlerts    Boolean @default(true)
+  newsletter        Boolean @default(true)
+  marketing         Boolean @default(false)
+  
+  // Fréquence des notifications
+  frequency         NotificationFrequency @default(IMMEDIATE)
+  
+  // Heures de réception (pour les notifications différées)
+  quietHoursStart   String?  // Format "HH:MM"
+  quietHoursEnd     String?  // Format "HH:MM"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Nouveau modèle pour les paramètres de notifications par email
+model EmailNotificationSettings {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  notificationSettingsId String @unique @db.ObjectId
+  notificationSettings NotificationSettings @relation(fields: [notificationSettingsId], references: [id], onDelete: Cascade)
+  
+  // Types d'emails
+  welcome           Boolean @default(true)
+  articlePublished  Boolean @default(true)
+  commentReply      Boolean @default(true)
+  securityAlert     Boolean @default(true)
+  newsletter        Boolean @default(true)
+  custom            Boolean @default(false)
+  
+  // Paramètres d'email
+  htmlEmails        Boolean @default(true)
+  plainTextEmails   Boolean @default(false)
+  emailSignature    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Nouveau modèle pour les abonnements aux catégories
+model CategorySubscription {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  categoryId  String   @db.ObjectId
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  // Type d'abonnement
+  type        SubscriptionType @default(ALL_ARTICLES)
+  
+  // Paramètres de notification
+  notifyOnPublish Boolean @default(true)
+  notifyOnUpdate  Boolean @default(false)
+  notifyOnComment Boolean @default(false)
+  
+  // Fréquence
+  frequency   NotificationFrequency @default(IMMEDIATE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, categoryId])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+// Nouveau modèle pour les codes 2FA
+model TwoFactorCode {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Code 2FA
+  code        String   // Code à 6 chiffres
+  type        TwoFactorType
+  
+  // Sécurité
+  used        Boolean  @default(false)
+  attempts    Int      @default(0)
+  expiresAt   DateTime
+  
+  // Métadonnées
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([code])
+  @@index([expiresAt])
+  @@index([used])
+}
+
+// Nouveau modèle pour les sessions 2FA
+model TwoFactorSession {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session
+  sessionId   String   @unique
+  isActive    Boolean  @default(true)
+  
+  // Métadonnées
+  ip          String?
+  userAgent   String?
+  deviceName  String?
+  lastUsed    DateTime @default(now())
+  
+  // Expiration
+  expiresAt   DateTime
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Nouveau modèle pour les factures
+model Invoice {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Informations de facturation
+  invoiceNumber String @unique
+  stripeInvoiceId String?
+  
+  // Détails
+  amount      Float
+  currency    String   @default("eur")
+  taxAmount   Float    @default(0)
+  totalAmount Float
+  
+  // Statut
+  status      InvoiceStatus @default(DRAFT)
+  dueDate     DateTime?
+  paidAt      DateTime?
+  
+  // Articles facturés
+  items       InvoiceItem[]
+  
+  // Métadonnées
+  notes       String?
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Nouveau modèle pour les éléments de facture
+model InvoiceItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  // Article
+  articleId   String   @db.ObjectId
+  article     Article  @relation(fields: [articleId], references: [id])
+  
+  // Détails
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  totalPrice  Float
+  
+  createdAt   DateTime @default(now())
+}
+
+// Nouveau modèle pour l'historique des achats
+model PurchaseHistory {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Article acheté
+  articleId   String   @db.ObjectId
+  article     Article  @relation(fields: [articleId], references: [id])
+  
+  // Paiement
+  paymentId   String   @db.ObjectId
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+  
+  // Métadonnées
+  purchaseDate DateTime @default(now())
+  price       Float
+  currency    String   @default("eur")
+  
+  // Accès
+  accessExpiresAt DateTime? // Si l'accès est limité dans le temps
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([articleId])
+  @@index([purchaseDate])
+}
+
+// Énumérations
+enum NotificationType {
+  SUCCESS
+  ERROR
+  WARNING
+  INFO
+  ARTICLE_PUBLISHED
+  COMMENT_REPLY
+  SECURITY_ALERT
+  NEWSLETTER
+  CUSTOM
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationFrequency {
+  IMMEDIATE
+  HOURLY
+  DAILY
+  WEEKLY
+  NEVER
+}
+
+enum SubscriptionType {
+  ALL_ARTICLES
+  FEATURED_ONLY
+  PREMIUM_ONLY
+  CUSTOM
+}
+
+enum TwoFactorType {
+  LOGIN
+  SETUP
+  RESET
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
 }

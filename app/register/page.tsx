@@ -48,7 +48,8 @@ export default function RegisterPage() {
       } else {
         setError(data.error || "Erreur lors de l'inscription");
       }
-    } catch (err) {
+    } catch (err) { 
+      console.error('Erreur lors de l\'inscription:', err);
       setError("Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
@@ -69,7 +70,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
-                Nom d'utilisateur
+                Nom d&apos;utilisateur
               </label>
               <Input
                 id="username"

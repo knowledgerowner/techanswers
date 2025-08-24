@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendContactConfirmationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +32,24 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
       },
     });
+
+    // Envoyer un email de confirmation
+    try {
+      const emailResult = await sendContactConfirmationEmail({
+        name,
+        email,
+        subject,
+        message,
+      });
+
+      if (!emailResult.success) {
+        console.error('Erreur lors de l\'envoi de l\'email de confirmation:', emailResult.error);
+        // On continue même si l'email échoue, mais on log l'erreur
+      }
+    } catch (emailError) {
+      console.error('Erreur lors de l\'envoi de l\'email de confirmation:', emailError);
+      // On continue même si l'email échoue
+    }
 
     return NextResponse.json(
       { message: 'Message envoyé avec succès', id: contact.id },

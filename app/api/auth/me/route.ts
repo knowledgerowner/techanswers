@@ -21,7 +21,12 @@ export async function GET(request: NextRequest) {
         username: true,
         email: true,
         isAdmin: true,
+        isSuperAdmin: true,
+        hasPurchased: true,
         createdAt: true,
+        twoFactorEnabled: true,
+        lastLoginAt: true,
+        isEmailVerified: true,
       },
     });
 
@@ -32,9 +37,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      user: userData,
-    });
+    return NextResponse.json(userData);
   } catch (error) {
     console.error('Erreur lors de la récupération des données utilisateur:', error);
     return NextResponse.json(

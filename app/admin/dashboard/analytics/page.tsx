@@ -1,48 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { AdminSidebar } from "@/components/admin-sidebar";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { 
   BarChart3, 
-  FileText, 
   Users, 
-  Mail, 
-  Settings, 
-  CreditCard, 
-  Bell, 
-  Search,
-  Menu,
-  X,
-  LogOut,
-  User,
-  Shield,
-  TrendingUp,
-  Calendar,
-  Tag,
-  Newspaper,
-  Eye,
-  Clock,
-  MousePointer,
-  Globe,
+  Eye, 
+  Clock, 
+  Monitor,
   Smartphone,
-  Monitor
+  Globe,
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -56,16 +30,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer
-} from "recharts";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { fr } from "date-fns/locale";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  isAdmin: boolean;
-}
+} from 'recharts';
 
 interface AnalyticsData {
   pageViews: number;
@@ -101,111 +66,130 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [timeRange, setTimeRange] = useState("7d");
-  const router = useRouter();
+  const [timeRange, setTimeRange] = useState("30d");
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  // Vérifier si l'utilisateur est superadmin
+  const isSuperAdmin = user?.isSuperAdmin;
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    loadAnalyticsData();
+  }, [timeRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (user) {
-      loadAnalyticsData();
-    }
-  }, [user, timeRange]);
-
-  const checkAuth = async () => {
+  const loadAnalyticsData = async () => {
     try {
-      const response = await fetch("/api/auth/me");
+      setLoading(true);
+      const response = await fetch(`/api/admin/analytics?range=${timeRange}`);
       if (response.ok) {
-        const userData = await response.json();
-        if (userData.isAdmin) {
-          setUser(userData);
-        } else {
-          router.push("/admin/login");
-        }
+        const data = await response.json();
+        setAnalyticsData(data);
       } else {
-        router.push("/admin/login");
+        console.error("Erreur lors du chargement des analytics");
       }
     } catch (error) {
-      router.push("/admin/login");
+      console.error("Erreur lors du chargement des analytics:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadAnalyticsData = async () => {
+  const handleManualCleanup = async () => {
+    if (!confirm('⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer TOUTES les données d\'analytics ?\n\nCette action est irréversible et supprimera définitivement toutes les vues, sessions et métriques.\n\nUn PDF de sauvegarde sera généré avant suppression.')) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/analytics?range=${timeRange}`);
+      setLoading(true);
+      const response = await fetch('/api/admin/analytics/cleanup', {
+        method: 'POST',
+      });
+
       if (response.ok) {
-        const data = await response.json();
-        setAnalyticsData(data);
+        const result = await response.json();
+        alert(`Nettoyage déclenché avec succès ! ${result.message}`);
+        // Recharger les données après le nettoyage
+        await loadAnalyticsData();
+      } else {
+        alert('Erreur lors du déclenchement du nettoyage');
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des analytics:", error);
-      // Données de démonstration
-      setAnalyticsData(getDemoData());
+      console.error('Erreur lors du nettoyage:', error);
+      alert('Erreur lors du déclenchement du nettoyage');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getDemoData = (): AnalyticsData => {
-    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1;
-    const dailyData = Array.from({ length: days }, (_, i) => {
-      const date = subDays(new Date(), days - 1 - i);
-      return {
-        date: format(date, "dd/MM", { locale: fr }),
-        views: Math.floor(Math.random() * 1000) + 500,
-        visitors: Math.floor(Math.random() * 300) + 150,
-        sessions: Math.floor(Math.random() * 400) + 200,
-      };
-    });
+  const handleStopCleanup = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir arrêter le nettoyage automatique des analytics ?')) {
+      return;
+    }
 
-    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
-      hour: i,
-      views: Math.floor(Math.random() * 100) + 20,
-      visitors: Math.floor(Math.random() * 30) + 10,
-    }));
-
-    return {
-      pageViews: 15420,
-      uniqueVisitors: 3240,
-      sessions: 4560,
-      avgSessionDuration: 245,
-      bounceRate: 32.5,
-      topPages: [
-        { page: "/", views: 5420, uniqueVisitors: 3240, avgTimeOnPage: 180 },
-        { page: "/articles", views: 3200, uniqueVisitors: 2100, avgTimeOnPage: 320 },
-        { page: "/about", views: 1200, uniqueVisitors: 980, avgTimeOnPage: 120 },
-        { page: "/contact", views: 800, uniqueVisitors: 650, avgTimeOnPage: 90 },
-      ],
-      deviceBreakdown: [
-        { device: "Desktop", percentage: 65 },
-        { device: "Mobile", percentage: 30 },
-        { device: "Tablet", percentage: 5 },
-      ],
-      trafficSources: [
-        { source: "Direct", percentage: 45 },
-        { source: "Google", percentage: 35 },
-        { source: "Social Media", percentage: 15 },
-        { source: "Other", percentage: 5 },
-      ],
-      hourlyData,
-      dailyData,
-    };
-  };
-
-  const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/admin/login");
+      setLoading(true);
+      const response = await fetch('/api/admin/analytics/cleanup/stop', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Nettoyage automatique arrêté avec succès ! ${result.message}`);
+      } else {
+        alert('Erreur lors de l\'arrêt du nettoyage automatique');
+      }
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      console.error('Erreur lors de l\'arrêt du nettoyage:', error);
+      alert('Erreur lors de l\'arrêt du nettoyage automatique');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/analytics/download-pdf', {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        // Créer un blob et télécharger le PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        alert('PDF téléchargé avec succès !');
+      } else {
+        alert('Erreur lors du téléchargement du PDF');
+      }
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      alert('Erreur lors du téléchargement du PDF');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDeviceIcon = (device: string) => {
+    switch (device.toLowerCase()) {
+      case 'mobile':
+        return <Smartphone className="h-4 w-4" />;
+      case 'tablet':
+        return <Monitor className="h-4 w-4" />;
+      default:
+        return <Monitor className="h-4 w-4" />;
+    }
+  };
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   if (loading) {
     return (
@@ -218,321 +202,402 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
-
-  return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <AdminSidebar className="hidden lg:flex" />
-
-      {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed left-0 top-0 h-full w-3/4 border-r bg-background">
-          <AdminSidebar className="w-full" />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="flex h-[60px] items-center gap-4 border-b bg-background px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Rechercher..."
-                className="w-full rounded-md border border-input bg-background px-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt={user.username} />
-                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.username}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Paramètres</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Déconnexion</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="container mx-auto p-6">
-            <div className="mb-8">
+  if (!analyticsData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-6">
+          <div className="flex justify-between items-center mb-8">
+            <div>
               <h1 className="text-3xl font-bold">Analytics</h1>
               <p className="text-muted-foreground">
                 Analysez les performances de votre site
               </p>
             </div>
-
-            {/* Time Range Selector */}
-            <div className="mb-6">
-              <Tabs value={timeRange} onValueChange={setTimeRange}>
-                <TabsList>
-                  <TabsTrigger value="1d">Aujourd'hui</TabsTrigger>
-                  <TabsTrigger value="7d">7 jours</TabsTrigger>
-                  <TabsTrigger value="30d">30 jours</TabsTrigger>
-                </TabsList>
-              </Tabs>
+            <div className="flex items-center space-x-4">
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">7 jours</SelectItem>
+                  <SelectItem value="30d">30 jours</SelectItem>
+                  <SelectItem value="90d">90 jours</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            {analyticsData && (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Aucune donnée disponible</h3>
+              <p className="text-muted-foreground mb-4">
+                Les analytics commenceront à s&apos;afficher une fois que vous aurez du trafic sur votre site.
+              </p>
+              <div className="text-sm text-muted-foreground">
+                <p>• Visitez quelques pages de votre site pour générer des données</p>
+                <p>• Les données apparaîtront après quelques minutes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground">
+              Analysez les performances de votre site
+            </p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 jours</SelectItem>
+                <SelectItem value="30d">30 jours</SelectItem>
+                <SelectItem value="90d">90 jours</SelectItem>
+              </SelectContent>
+            </Select>
+            {isSuperAdmin && (
               <>
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Pages vues</CardTitle>
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analyticsData.pageViews.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +20.1% par rapport à la période précédente
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Visiteurs uniques</CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analyticsData.uniqueVisitors.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +12.3% par rapport à la période précédente
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Sessions</CardTitle>
-                      <MousePointer className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analyticsData.sessions.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">
-                        +8.7% par rapport à la période précédente
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Temps moyen</CardTitle>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{Math.floor(analyticsData.avgSessionDuration / 60)}m {analyticsData.avgSessionDuration % 60}s</div>
-                      <p className="text-xs text-muted-foreground">
-                        Taux de rebond: {analyticsData.bounceRate}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                  {/* Daily Traffic Chart */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Trafic quotidien</CardTitle>
-                      <CardDescription>
-                        Évolution des vues et visiteurs au fil du temps
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={analyticsData.dailyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Area type="monotone" dataKey="views" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                          <Area type="monotone" dataKey="visitors" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  {/* Hourly Traffic Chart */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Trafic horaire</CardTitle>
-                      <CardDescription>
-                        Répartition des visites par heure
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={analyticsData.hourlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="hour" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="views" fill="#8884d8" />
-                          <Bar dataKey="visitors" fill="#82ca9d" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Device and Source Breakdown */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                  {/* Device Breakdown */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Appareils</CardTitle>
-                      <CardDescription>
-                        Répartition par type d'appareil
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={analyticsData.deviceBreakdown}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ device, percentage }) => `${device} ${percentage}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="percentage"
-                          >
-                            {analyticsData.deviceBreakdown.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  {/* Traffic Sources */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Sources de trafic</CardTitle>
-                      <CardDescription>
-                        D'où viennent vos visiteurs
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={analyticsData.trafficSources}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ source, percentage }) => `${source} ${percentage}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="percentage"
-                          >
-                            {analyticsData.trafficSources.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Top Pages */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Pages les plus visitées</CardTitle>
-                    <CardDescription>
-                      Les pages qui génèrent le plus de trafic
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analyticsData.topPages.map((page, index) => (
-                        <div key={page.page} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium">{page.page}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {page.uniqueVisitors} visiteurs uniques
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">{page.views.toLocaleString()} vues</p>
-                            <p className="text-sm text-muted-foreground">
-                              {Math.floor(page.avgTimeOnPage / 60)}m {page.avgTimeOnPage % 60}s en moyenne
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <Button 
+                  variant="outline" 
+                  onClick={handleDownloadPDF}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  📊 Télécharger PDF
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleManualCleanup}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  🗑️ Supprimer TOUTES les analytics
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleStopCleanup}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  🛑 Arrêter auto-nettoyage
+                </Button>
               </>
             )}
           </div>
-        </main>
+        </div>
+
+        {/* Statistiques principales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Vues de pages</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analyticsData.pageViews.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">
+                Total sur {timeRange === "7d" ? "7" : timeRange === "30d" ? "30" : timeRange === "90d" ? "90" : "365"} jours
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Visiteurs uniques</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analyticsData.uniqueVisitors.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">
+                Sessions uniques
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sessions</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analyticsData.sessions.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">
+                Total des sessions
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Durée moyenne</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {analyticsData.avgSessionDuration > 0 
+                  ? `${Math.floor(analyticsData.avgSessionDuration / 60)}m ${analyticsData.avgSessionDuration % 60}s`
+                  : "0s"
+                }
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Taux de rebond: {analyticsData.bounceRate}%
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
+            <TabsTrigger value="pages">Pages visitées</TabsTrigger>
+            <TabsTrigger value="devices">Appareils</TabsTrigger>
+            <TabsTrigger value="sources">Sources de trafic</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Graphique des vues quotidiennes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Évolution des vues</CardTitle>
+                <CardDescription>
+                  Nombre de vues par jour sur les {timeRange === "7d" ? "7" : timeRange === "30d" ? "30" : timeRange === "90d" ? "90" : "365"} derniers jours
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={analyticsData.dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Area type="monotone" dataKey="views" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} name="Vues" />
+                    <Area type="monotone" dataKey="visitors" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} name="Visiteurs" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Graphique des vues horaires */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Activité horaire</CardTitle>
+                <CardDescription>
+                  Répartition des vues par heure de la journée
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analyticsData.hourlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hour" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="views" fill="#8884d8" name="Vues" />
+                    <Bar dataKey="visitors" fill="#82ca9d" name="Visiteurs" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="pages" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pages les plus visitées</CardTitle>
+                <CardDescription>
+                  Top 10 des pages avec le plus de vues
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {analyticsData.topPages.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Aucune page visitée pour le moment</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {analyticsData.topPages.map((page, index) => (
+                      <div key={page.page} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <Badge variant="outline">{index + 1}</Badge>
+                          <div>
+                            <div className="font-medium">{page.page}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Temps moyen: {page.avgTimeOnPage > 0 
+                                ? `${Math.floor(page.avgTimeOnPage / 60)}m ${page.avgTimeOnPage % 60}s`
+                                : "0s"
+                              }
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold">{page.views.toLocaleString()} vues</div>
+                          <div className="text-sm text-muted-foreground">
+                            {page.uniqueVisitors.toLocaleString()} visiteurs uniques
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="devices" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Graphique en camembert des appareils */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Répartition par appareil</CardTitle>
+                  <CardDescription>
+                    Pourcentage de trafic par type d&apos;appareil
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData.deviceBreakdown.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune donnée d&apos;appareil disponible</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.deviceBreakdown}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ device, percentage }) => `${device}: ${percentage}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="percentage"
+                        >
+                          {analyticsData.deviceBreakdown.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Liste détaillée des appareils */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Détails des appareils</CardTitle>
+                  <CardDescription>
+                    Statistiques détaillées par type d&apos;appareil
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData.deviceBreakdown.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune donnée d&apos;appareil disponible</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {analyticsData.deviceBreakdown.map((device) => (
+                        <div key={device.device} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            {getDeviceIcon(device.device)}
+                            <span className="font-medium">{device.device}</span>
+                          </div>
+                          <Badge variant="outline">{device.percentage}%</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sources" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Graphique en camembert des sources */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sources de trafic</CardTitle>
+                  <CardDescription>
+                    Répartition du trafic par source
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData.trafficSources.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune donnée de source disponible</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.trafficSources}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ source, percentage }) => `${source}: ${percentage}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="percentage"
+                        >
+                          {analyticsData.trafficSources.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Liste détaillée des sources */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Détails des sources</CardTitle>
+                  <CardDescription>
+                    Statistiques détaillées par source de trafic
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsData.trafficSources.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune donnée de source disponible</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {analyticsData.trafficSources.map((source, index) => (
+                        <div key={`${source.source}-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Globe className="h-4 w-4" />
+                            <span className="font-medium">{source.source}</span>
+                          </div>
+                          <Badge variant="outline">{source.percentage}%</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

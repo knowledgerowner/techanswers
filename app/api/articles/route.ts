@@ -9,11 +9,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
     const sort = searchParams.get('sort') || 'date';
+    const isMarketing = searchParams.get('isMarketing');
 
     const skip = (page - 1) * limit;
 
     // Construire les conditions de recherche
-    const where: any = {
+    const where: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
       isPublished: true,
     };
 
@@ -29,8 +30,12 @@ export async function GET(request: NextRequest) {
       where.categoryIds = { has: category };
     }
 
+    if (isMarketing === 'true') {
+      where.isMarketing = true;
+    }
+
     // Construire l'ordre de tri
-    const orderBy: any = {};
+    const orderBy: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (sort === 'title') {
       orderBy.title = 'asc';
     } else {
@@ -48,9 +53,11 @@ export async function GET(request: NextRequest) {
           slug: true,
           imageUrl: true,
           isMarketing: true,
+          isPremium: true,
+          premiumPrice: true,
           categoryIds: true,
           createdAt: true,
-          admin: {
+          user: {
             select: {
               username: true,
             },

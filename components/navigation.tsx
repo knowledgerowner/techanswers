@@ -1,134 +1,288 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { Menu, User, LogOut, Settings, ChevronDown, CreditCard, Bell, Shield } from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import Image from "next/image";
+import PersistentNotificationBell from "./persistent-notification-bell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export function Navigation() {
-  const [open, setOpen] = React.useState(false);
+export default function Navigation() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isLoading, logout } = useAuth();
 
-  React.useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  const links = [
-    { href: "/", label: "Accueil" },
-    { href: "/articles", label: "Articles" },
-    { href: "/categories", label: "Catégories" },
-    { href: "/about", label: "À propos" },
-    { href: "/contact", label: "Contact" },
-  ];
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/70 bg-background/80 border-b">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background">
-              <span className="text-xs font-bold">TA</span>
-            </span>
-            <span className="font-semibold tracking-tight">TechAnswers</span>
-          </Link>
-        </div>
-
-        <div className="hidden md:flex items-center gap-6">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={cn(
-                "text-sm text-muted-foreground hover:text-foreground transition-colors"
-              )}
-            >
-              {l.label}
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Image src="/Logo.png" alt="TechAnswers" width={64} height={64} className="rounded-lg bg-transparent overflow-hidden"/>
+              </div>
+              <span className="text-xl font-bold">TechAnswers</span>
             </Link>
-          ))}
-        </div>
+          </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" className="rounded-full">Se connecter</Button>
-          <Button className="rounded-full">S'abonner</Button>
-        </div>
-
-        <button
-          aria-label="Ouvrir le menu"
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md border"
-          onClick={() => setOpen(true)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-5 w-5"
-          >
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </nav>
-
-      {/* Mobile Drawer */}
-      <div
-        className={cn(
-          "fixed inset-0 z-50 md:hidden transition-opacity",
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
-        onClick={() => setOpen(false)}
-      />
-      <aside
-        className={cn(
-          "fixed top-0 right-0 h-full w-80 max-w-[85%] bg-background border-l z-50 md:hidden transition-transform duration-300",
-          open ? "translate-x-0" : "translate-x-full"
-        )}
-        aria-hidden={!open}
-      >
-        <div className="h-16 px-4 border-b flex items-center justify-between">
-          <span className="font-semibold">Menu</span>
-          <button
-            aria-label="Fermer"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border"
-            onClick={() => setOpen(false)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-5 w-5"
-            >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="p-4 flex flex-col gap-2">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="rounded-md px-3 py-2 text-sm hover:bg-muted"
-              onClick={() => setOpen(false)}
-            >
-              {l.label}
+          {/* Navigation Desktop */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
+              Accueil
             </Link>
-          ))}
+            <Link href="/articles" className="text-sm font-medium transition-colors hover:text-primary">
+              Articles
+            </Link>
+            <Link href="/categories" className="text-sm font-medium transition-colors hover:text-primary">
+              Catégories
+            </Link>
+            <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary">
+              À propos
+            </Link>
+            <Link href="/partners" className="text-sm font-medium transition-colors hover:text-primary">
+              Partenaires
+            </Link>
+            <Link href="/contact" className="text-sm font-medium transition-colors hover:text-primary">
+              Contact
+            </Link>
+          </div>
+
+          {/* Actions Desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            {!isLoading && (
+              <>
+                {user ? (
+                  <div className="flex items-center space-x-4">
+                    {user.isAdmin && (
+                      <Link href="/admin/dashboard">
+                        <Badge className="bg-red-500 text-white hover:bg-red-600">
+                          Admin
+                        </Badge>
+                      </Link>
+                    )}
+                    {user.isSuperAdmin && (
+                      <Link href="/admin/dashboard">
+                        <Badge className="bg-red-500 text-white hover:bg-red-600">
+                          Super Admin
+                        </Badge>
+                      </Link>
+                    )}
+                    
+                    {/* Notification Bell pour les notifications persistantes */}
+                    <PersistentNotificationBell />
+                    
+                    {/* Menu utilisateur */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="flex items-center space-x-2">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium">{user.username}</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56" align="end">
+                        <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="flex items-center">
+                            <User className="mr-2 h-4 w-4" />
+                            Profil
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile/settings" className="flex items-center">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Paramètres
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile/billing" className="flex items-center">
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Facturation
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile/notifications" className="flex items-center">
+                            <Bell className="mr-2 h-4 w-4" />
+                            Notifications
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile/security" className="flex items-center">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Sécurité
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Déconnexion
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Link href="/login">
+                      <Button variant="ghost" size="sm">
+                        Connexion
+                      </Button>
+                    </Link>
+                    <Link href="/register">
+                      <Button size="sm">
+                        Inscription
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Menu Mobile */}
+          <div className="md:hidden">
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Navigation principale du site
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <Link 
+                    href="/" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Accueil
+                  </Link>
+                  <Link 
+                    href="/articles" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Articles
+                  </Link>
+                  <Link 
+                    href="/categories" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Catégories
+                  </Link>
+                  <Link 
+                    href="/about" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    À propos
+                  </Link>
+                  <Link 
+                    href="/partners" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Partenaires
+                  </Link>
+                  <Link 
+                    href="/contact" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Contact
+                  </Link>
+                  
+                  <div className="pt-4 border-t">
+                    {!isLoading && (
+                      <>
+                        {user ? (
+                          <div className="space-y-2">
+                            {user.isAdmin && (
+                              <Link href="/admin/dashboard" onClick={() => setIsMenuOpen(false)}>
+                                <Badge className="bg-red-500 text-white hover:bg-red-600">
+                                  Admin Dashboard
+                                </Badge>
+                              </Link>
+                            )}
+                            
+                            {/* Notifications dans le menu mobile */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Notifications
+                              </span>
+                              <PersistentNotificationBell />
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                {user.username}
+                              </span>
+                              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                                <LogOut className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                              <Button variant="ghost" className="w-full justify-start">
+                                <User className="mr-2 h-4 w-4" />
+                                Connexion
+                              </Button>
+                            </Link>
+                            <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                              <Button className="w-full justify-start">
+                                Inscription
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-        <div className="p-4 mt-auto flex gap-2">
-          <Button variant="ghost" className="flex-1 rounded-full">Se connecter</Button>
-          <Button className="flex-1 rounded-full">S'abonner</Button>
-        </div>
-      </aside>
-    </header>
+      </div>
+    </nav>
   );
-}
-
-export default Navigation; 
+} 

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Construire les filtres
-    const where: any = {};
+    const where: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
     
     if (search) {
       where.OR = [
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, slug, description } = body;
+    const { name, slug, description, seoTitle, seoDesc, seoKeywords, seoImg } = body;
 
     // Validation
     if (!name || !slug) {
@@ -121,7 +121,11 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         slug,
-        description
+        description,
+        seoTitle,
+        seoDesc,
+        seoKeywords,
+        seoImg
       }
     });
 

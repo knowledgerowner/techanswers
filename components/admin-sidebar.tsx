@@ -5,13 +5,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { 
   BarChart3, 
   FileText, 
   Users, 
   Mail, 
-  Settings, 
   CreditCard, 
   Shield,
   TrendingUp,
@@ -20,12 +18,14 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 interface SidebarItem {
   title: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
-  items?: { title: string; href: string }[];
+  items?: { title: string; href: string; disabled?: boolean }[];
+  requiresSuperAdmin?: boolean;
 }
 
 interface AdminSidebarProps {
@@ -35,6 +35,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const { user } = useAuth();
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -49,8 +50,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       href: "/admin/dashboard/articles",
       items: [
         { title: "Tous les articles", href: "/admin/dashboard/articles" },
-        { title: "Créer un article", href: "/admin/dashboard/articles/new" },
-        { title: "Brouillons", href: "/admin/dashboard/articles/drafts" }
+        { title: "Articles publiés", href: "/admin/dashboard/articles/published" },
+        { title: "Brouillons", href: "/admin/dashboard/articles/drafts" },
+        { title: "Créer un article", href: "/admin/dashboard/articles/new" }
       ]
     },
     {
@@ -66,37 +68,38 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "Utilisateurs",
       icon: Users,
       href: "/admin/dashboard/users",
+      requiresSuperAdmin: true,
       items: [
         { title: "Tous les utilisateurs", href: "/admin/dashboard/users" },
-        { title: "Administrateurs", href: "/admin/dashboard/users/admins" }
+        { title: "Administrateurs", href: "/admin/dashboard/admins" }
       ]
     },
     {
-      title: "Messages",
+      title: "Contacts",
       icon: Mail,
-      href: "/admin/dashboard/messages",
+      href: "/admin/dashboard/contacts",
       items: [
-        { title: "Demandes de contact", href: "/admin/dashboard/messages" },
-        { title: "Newsletter", href: "/admin/dashboard/newsletter" }
+        { title: "Demandes de contact", href: "/admin/dashboard/contacts" },
+        { title: "Newsletter", href: "/admin/dashboard/newsletter", disabled: true }
       ]
     },
     {
       title: "Analytics",
       icon: TrendingUp,
       href: "/admin/dashboard/analytics",
+      requiresSuperAdmin: true,
       items: [
         { title: "Vue d'ensemble", href: "/admin/dashboard/analytics" },
-        { title: "Pages visitées", href: "/admin/dashboard/analytics/pages" },
-        { title: "Utilisateurs", href: "/admin/dashboard/analytics/users" }
       ]
     },
     {
       title: "Paiements",
       icon: CreditCard,
       href: "/admin/dashboard/payments",
+      requiresSuperAdmin: true,
       items: [
         { title: "Transactions", href: "/admin/dashboard/payments" },
-        { title: "Rapports", href: "/admin/dashboard/payments/reports" }
+        { title: "Rapports", href: "/admin/dashboard/payments/reports", disabled: true }
       ]
     },
     {
@@ -104,21 +107,19 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       icon: Shield,
       href: "/admin/dashboard/security",
       items: [
-        { title: "Tentatives d'intrusion", href: "/admin/dashboard/security/bruteforce" },
-        { title: "Logs", href: "/admin/dashboard/security/logs" }
-      ]
-    },
-    {
-      title: "Paramètres",
-      icon: Settings,
-      href: "/admin/dashboard/settings",
-      items: [
-        { title: "Général", href: "/admin/dashboard/settings" },
-        { title: "Email", href: "/admin/dashboard/settings/email" },
-        { title: "Paiements", href: "/admin/dashboard/settings/payments" }
+        { title: "Tentatives de bruteforce", href: "/admin/dashboard/security/bruteforce" },
+        { title: "Logs de sécurité", href: "/admin/dashboard/security/logs", disabled: true }
       ]
     }
   ];
+
+  // Filtrer les éléments selon les permissions
+  const filteredItems = sidebarItems.filter(item => {
+    if (item.requiresSuperAdmin) {
+      return user && (user as any).isSuperAdmin; // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
+    return true;
+  });
 
   const toggleExpanded = (title: string) => {
     setExpandedItems(prev => 
@@ -128,76 +129,81 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     );
   };
 
-  const isActive = (href: string) => {
-    if (href === "/admin/dashboard") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
-  };
-
-  const isExpanded = (title: string) => {
-    return expandedItems.includes(title);
-  };
+  const isActive = (href: string) => pathname === href;
+  const isExpanded = (title: string) => expandedItems.includes(title);
 
   return (
     <div className={cn("flex h-full w-64 flex-col border-r bg-background", className)}>
-      <div className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center gap-2 font-semibold">
-          <Shield className="h-6 w-6" />
-          <span>Admin Panel</span>
-        </div>
+      <div className="flex h-14 items-center border-b px-4">
+        <Link href="/admin/dashboard" className="flex items-center space-x-2">
+          <Newspaper className="h-6 w-6" />
+          <span className="font-semibold">Admin Panel</span>
+        </Link>
       </div>
       
       <ScrollArea className="flex-1">
-        <div className="p-4">
-          <nav className="space-y-2">
-            {sidebarItems.map((item) => (
-              <div key={item.title}>
-                <Button
-                  variant={isActive(item.href) ? "secondary" : "ghost"}
-                  className={cn(
-                    "w-full justify-start",
-                    isActive(item.href) && "bg-secondary"
-                  )}
-                  onClick={() => {
-                    if (item.items && item.items.length > 0) {
-                      toggleExpanded(item.title);
-                    } else {
-                      window.location.href = item.href;
-                    }
-                  }}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.title}
-                  {item.items && item.items.length > 0 && (
-                    <ChevronDown 
-                      className={cn(
-                        "ml-auto h-4 w-4 transition-transform",
-                        isExpanded(item.title) && "rotate-180"
-                      )} 
-                    />
-                  )}
-                </Button>
-                
-                {item.items && item.items.length > 0 && isExpanded(item.title) && (
-                  <div className="ml-6 mt-2 space-y-1">
-                    {item.items.map((subItem) => (
-                      <Link
-                        key={subItem.href}
-                        href={subItem.href}
-                        className={cn(
-                          "block rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                          isActive(subItem.href) && "bg-accent text-accent-foreground"
-                        )}
-                      >
-                        {subItem.title}
-                      </Link>
-                    ))}
-                  </div>
+        <div className="p-4 space-y-2">
+          {filteredItems.map((item) => (
+            <div key={item.title}>
+              <Button
+                variant={isActive(item.href) ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start",
+                  isActive(item.href) && "bg-secondary"
                 )}
-              </div>
-            ))}
-          </nav>
+                onClick={() => {
+                  if (item.items && item.items.length > 0) {
+                    toggleExpanded(item.title);
+                  } else {
+                    window.location.href = item.href;
+                  }
+                }}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.title}
+                {item.items && item.items.length > 0 && (
+                  <ChevronDown 
+                    className={cn(
+                      "ml-auto h-4 w-4 transition-transform",
+                      isExpanded(item.title) && "rotate-180"
+                    )} 
+                  />
+                )}
+              </Button>
+              
+              {item.items && item.items.length > 0 && isExpanded(item.title) && (
+                <div className="ml-6 mt-2 space-y-1">
+                  {item.items.map((subItem) => (
+                    <div key={subItem.href}>
+                      {subItem.disabled ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled
+                          className="w-full justify-start text-sm opacity-50 cursor-not-allowed"
+                        >
+                          {subItem.title}
+                        </Button>
+                      ) : (
+                        <Link href={subItem.href}>
+                          <Button
+                            variant={isActive(subItem.href) ? "secondary" : "ghost"}
+                            size="sm"
+                            className={cn(
+                              "w-full justify-start text-sm",
+                              isActive(subItem.href) && "bg-secondary"
+                            )}
+                          >
+                            {subItem.title}
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </ScrollArea>
     </div>

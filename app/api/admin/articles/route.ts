@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { notifyArticlePublished } from "@/lib/notifications";
 
 // GET - Récupérer tous les articles avec pagination et filtres
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Construire les filtres
-    const where: any = {};
+    const where: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
     
     if (search) {
       where.OR = [
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
       where.isPublished = false;
     }
 
-    if (category) {
+    if (category && category !== "all") {
       where.categoryIds = { has: category };
     }
 
@@ -96,6 +97,10 @@ export async function POST(request: NextRequest) {
       excerpt,
       isPublished = false,
       isMarketing = false,
+      isPremium = false,
+      isBilled = false,
+      premiumPrice = 0,
+      billedPrice = 0,
       isAuto = false,
       seoTitle,
       seoDesc,
@@ -134,6 +139,10 @@ export async function POST(request: NextRequest) {
         excerpt,
         isPublished,
         isMarketing,
+        isPremium,
+        isBilled,
+        premiumPrice,
+        billedPrice,
         isAuto,
         seoTitle,
         seoDesc,
@@ -152,6 +161,22 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Envoyer des notifications aux utilisateurs abonnés si l'article est publié
+    if (isPublished && categoryIds.length > 0) {
+      try {
+        await notifyArticlePublished({
+          articleId: article.id,
+          articleTitle: article.title,
+          articleSlug: article.slug,
+          categoryIds: categoryIds,
+          authorUsername: article.user.username
+        });
+      } catch (notificationError) {
+        console.error('Erreur lors de l\'envoi des notifications:', notificationError);
+        // Ne pas faire échouer la création de l'article si les notifications échouent
+      }
+    }
 
     return NextResponse.json({
       article,
