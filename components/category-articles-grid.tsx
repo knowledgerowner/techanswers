@@ -212,7 +212,7 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      <h4 className="text-sm font-medium text-white group-hover:text-blue-600 transition-colors line-clamp-2">
                         {article.title}
                       </h4>
                       {article.excerpt && (
@@ -220,17 +220,6 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                           {article.excerpt}
                         </p>
                       )}
-                      <div className="flex items-center mt-2">
-                        {article.isPremium ? (
-                          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                            Premium
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                            Gratuit
-                          </Badge>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </CardContent>

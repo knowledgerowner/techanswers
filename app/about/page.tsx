@@ -21,7 +21,7 @@ export default function AboutPage() {
 
       {/* Notre Histoire */}
       <section className="mb-16 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-center md:text-left">
           <div>
             <h2 className="text-3xl font-bold mb-6">Notre Histoire</h2>
             <div className="prose prose-lg dark:prose-invert max-w-none">
@@ -271,7 +271,7 @@ export default function AboutPage() {
          <h2 className="text-3xl font-bold text-center mb-12">Technologies que nous couvrons</h2>
          
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-80/100 mx-auto">
-           <Card className="col-span-2">
+           <Card className="col-span-1 lg:col-span-2">
              <CardContent className="p-6">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                  <span className="text-xl">⚛️</span>
@@ -355,7 +355,7 @@ export default function AboutPage() {
              </CardContent>
            </Card>
 
-           <Card className="col-span-3">
+           <Card className="col-span-1 lg:col-span-3">
              <CardContent className="p-6">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                  <span className="text-xl">🔒</span>
@@ -376,7 +376,7 @@ export default function AboutPage() {
              </CardContent>
            </Card>
 
-           <Card className="col-span-2">
+           <Card className="col-span-1 lg:col-span-2">
              <CardContent className="p-6">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                  <span className="text-xl">🤖</span>
@@ -481,7 +481,7 @@ export default function AboutPage() {
              </CardContent>
            </Card>
 
-           <Card className="col-span-2">
+           <Card className="col-span-1 lg:col-span-2">
              <CardContent className="p-6">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                  <span className="text-xl">🌐</span>
@@ -523,7 +523,7 @@ export default function AboutPage() {
              </CardContent>
            </Card>
 
-           <Card className="col-span-3">
+           <Card className="col-span-1 lg:col-span-3">
              <CardContent className="p-6">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                  <span className="text-xl">🔍</span>

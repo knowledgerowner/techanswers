@@ -103,7 +103,7 @@ export default function ContactPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 ">
         {/* Formulaire de contact */}
-        <div className="space-y-6 col-span-2">
+        <div className="space-y-6 col-span-1 lg:col-span-2 text-center lg:text-left">
           <Card className="border-2 border-primary/20">
             <CardContent className="p-6">
               <h2 className="text-2xl font-bold mb-6">Envoyez-nous un message</h2>
@@ -187,8 +187,8 @@ export default function ContactPage() {
           {/* Informations supplémentaires */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Pourquoi choisir TechAnswers ?</h3>
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <h3 className="text-lg font-semibold mb-4 text-center xl:text-left">Pourquoi choisir TechAnswers ?</h3>
+              <div className="space-y-3 text-sm text-muted-foreground text-center xl:text-left">
                 <p>✅ Expertise technique approfondie et mise à jour régulière</p>
                 <p>✅ Réponse personnalisée et adaptée à vos besoins spécifiques</p>
                 <p>✅ Accompagnement complet de la conception à la mise en production</p>
@@ -202,16 +202,16 @@ export default function ContactPage() {
         {/* Section Informations et Présentation */}
         <div className="space-y-8">
           {/* Présentation d&apos;Oxelya */}
-          <Card className="border-2 border-primary/20">
+          <Card className="border-2 border-primary/20 text-center lg:text-left">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex flex-col xl:flex-row items-center justify-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                   O
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Oxelya</h2>
-                  <p className="text-muted-foreground">Entreprise de Services Numériques</p>
-                  <div className="flex gap-2 mt-2">
+                <div className="text-center lg:text-left w-full">
+                  <h2 className="text-2xl font-bold text-center xl:text-left">Oxelya</h2>
+                  <p className="text-muted-foreground text-center xl:text-left">Entreprise de Services Numériques</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="outline">Développement Web</Badge>
                     <Badge variant="outline">Cybersécurité</Badge>
                     <Badge variant="outline">SEO</Badge>
@@ -219,7 +219,7 @@ export default function ContactPage() {
                 </div>
               </div>
               
-              <div className="prose prose-sm dark:prose-invert max-w-none">
+              <div className="prose prose-sm dark:prose-invert max-w-none text-center xl:text-left">
                 <p className="mb-4">
                   Oxelya est une entreprise spécialisée dans les services numériques, créatrice de TechAnswers, 
                   une plateforme de référence dédiée au partage de connaissances techniques et à l&apos;accompagnement 
@@ -308,10 +308,10 @@ export default function ContactPage() {
           
         </div>
 
-        <Card className="col-span-3">
+        <Card className="col-span-1 lg:col-span-3">
             <CardContent className="p-6 w-full text-center">
               <h3 className="text-xl font-semibold mb-4">Services Oxelya</h3>
-              <div className="space-y-3 flex justify-center gap-4 text-left">
+              <div className="space-y-3 block lg:flex justify-center gap-4 text-left">
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
