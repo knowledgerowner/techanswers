@@ -1,59 +1,45 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useEffect, useState } from "react";
-import { usePurchasedArticles } from "@/lib/hooks/usePurchasedArticles";
 import { Globe } from "@/components/ui/globe";
 import PremiumArticleCard from "@/components/premium-article-card";
 import ArticleCard from "@/components/article-card";
 import NoScriptFallback from "@/components/noscript-fallback";
+import { prisma } from "@/lib/prisma";
+import NewsletterForm from "@/components/newsletter-form";
 
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string | null;
-  slug: string;
-  imageUrl: string | null;
-  isMarketing: boolean;
-  isPremium: boolean;
-  premiumPrice: number | null;
-  categoryIds: string[];
-  createdAt: string;
-  user: {
-    username: string;
-  };
-}
 
-export default function Home() {
-  const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
-  const [recentArticles, setRecentArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { hasPurchased } = usePurchasedArticles();
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const [featuredResponse, recentResponse] = await Promise.all([
-          fetch('/api/articles/featured'),
-          fetch('/api/articles/recent')
-        ]);
-        
-        const featuredData = await featuredResponse.json();
-        const recentData = await recentResponse.json();
-        
-        setFeaturedArticles(featuredData);
-        setRecentArticles(recentData);
-      } catch (error) {
-        console.error('Erreur lors du chargement des articles:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+export default async function Home() {
+  // Récupération des articles côté serveur
+  const [featuredArticlesRaw, recentArticlesRaw] = await Promise.all([
+    prisma.article.findMany({
+      where: { 
+        isPublished: true,
+        isMarketing: true 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6
+    }),
+    prisma.article.findMany({
+      where: { isPublished: true },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 12
+    })
+  ]);
 
-    fetchArticles();
-  }, []);
+  const featuredArticles = featuredArticlesRaw;
+  const recentArticles = recentArticlesRaw;
 
   const faq = [
     {
@@ -181,18 +167,18 @@ export default function Home() {
             <div key={article.id}>
               {article.isPremium ? (
                 <div className="h-[500px]">
-                  <PremiumArticleCard
-                    article={{
-                      id: article.id,
-                      title: article.title,
-                      excerpt: article.excerpt || undefined,
-                      slug: article.slug,
-                      imageUrl: article.imageUrl || undefined,
-                      premiumPrice: article.premiumPrice || 0,
-                      isPremium: article.isPremium,
-                    }}
-                    hasPurchased={hasPurchased(article.id)}
-                  />
+                                      <PremiumArticleCard
+                      article={{
+                        id: article.id,
+                        title: article.title,
+                        excerpt: article.excerpt || undefined,
+                        slug: article.slug,
+                        imageUrl: article.imageUrl || undefined,
+                        premiumPrice: article.premiumPrice || 0,
+                        isPremium: article.isPremium,
+                      }}
+                      hasPurchased={false}
+                    />
                 </div>
               ) : (
                 <ArticleCard article={{
@@ -201,7 +187,7 @@ export default function Home() {
                   excerpt: article.excerpt,
                   slug: article.slug,
                   imageUrl: article.imageUrl,
-                  createdAt: article.createdAt,
+                  createdAt: article.createdAt.toISOString(),
                   user: article.user,
                 }} />
               )}
@@ -221,37 +207,24 @@ export default function Home() {
           </p>
         </div>
         
-        {loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden animate-pulse">
-                <div className="aspect-[16/9] bg-muted" />
-                <CardContent className="p-4 space-y-2">
-                  <div className="h-4 bg-muted rounded w-16" />
-                  <div className="h-4 bg-muted rounded w-full" />
-                  <div className="h-3 bg-muted rounded w-3/4" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : recentArticles.length > 0 ? (
+        {recentArticles.length > 0 ? (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {recentArticles.map((article) => (
               <div key={article.id}>
                 {article.isPremium ? (
                   <div className="h-[500px]">
-                    <PremiumArticleCard
-                      article={{
-                        id: article.id,
-                        title: article.title,
-                        excerpt: article.excerpt || undefined,
-                        slug: article.slug,
-                        imageUrl: article.imageUrl || undefined,
-                        premiumPrice: article.premiumPrice || 0,
-                        isPremium: article.isPremium,
-                      }}
-                      hasPurchased={hasPurchased(article.id)}
-                    />
+                                      <PremiumArticleCard
+                    article={{
+                      id: article.id,
+                      title: article.title,
+                      excerpt: article.excerpt || undefined,
+                      slug: article.slug,
+                      imageUrl: article.imageUrl || undefined,
+                      premiumPrice: article.premiumPrice || 0,
+                      isPremium: article.isPremium,
+                    }}
+                    hasPurchased={false}
+                  />
                   </div>
                 ) : (
                   <ArticleCard article={{
@@ -260,7 +233,7 @@ export default function Home() {
                     excerpt: article.excerpt,
                     slug: article.slug,
                     imageUrl: article.imageUrl,
-                    createdAt: article.createdAt,
+                    createdAt: article.createdAt.toISOString(),
                     user: article.user,
                   }} />
                 )}
@@ -284,18 +257,7 @@ export default function Home() {
               sur le développement web, l&apos;IA, et les technologies émergentes 
               directement dans votre boîte mail.
             </p>
-            <form
-              className="mt-6 flex flex-col gap-3 sm:flex-row"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="email"
-                required
-                placeholder="Votre email"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-1"
-              />
-              <Button className="sm:w-auto">S&apos;abonner</Button>
-            </form>
+            <NewsletterForm />
           </div>
           <div className="relative h-40 md:h-auto">
             <div className="absolute inset-0 flex items-center justify-center">
@@ -356,7 +318,10 @@ export default function Home() {
 
       {/* Fallback NoScript pour les bots et navigateurs sans JavaScript */}
       <NoScriptFallback 
-        articles={[...featuredArticles, ...recentArticles]}
+        articles={[...featuredArticles, ...recentArticles].map(article => ({
+          ...article,
+          createdAt: article.createdAt.toISOString()
+        }))}
         title="TechAnswers - Blog technique et articles de développement"
         description="Découvrez nos articles à la une et derniers articles sur le développement web, l&apos;IA, la cybersécurité et les technologies émergentes. Contenu technique de qualité par des experts."
         showPagination={false}

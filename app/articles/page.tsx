@@ -1,167 +1,73 @@
-"use client";
-
-import { useState, useEffect, Suspense } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Search, 
-  ArrowLeft, 
-  ArrowRight,
-  Filter,
-} from "lucide-react";
-import { usePurchasedArticles } from "@/lib/hooks/usePurchasedArticles";
-import PremiumArticleCard from "@/components/premium-article-card";
-import ArticleCard from "@/components/article-card";
+import { prisma } from "@/lib/prisma";
 import NoScriptFallback from "@/components/noscript-fallback";
+import ArticlesSearchFilters from "@/components/articles-search-filters";
+import ArticlesGrid from "@/components/articles-grid";
+import ArticlesPagination from "@/components/articles-pagination";
 
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string | null;
-  slug: string;
-  imageUrl: string | null;
-  isMarketing: boolean;
-  isPremium: boolean;
-  premiumPrice: number | null;
-  categoryIds: string[];
-  createdAt: string;
-  user: {
-    username: string;
+export default async function ArticlesPage({
+  searchParams,
+}: {
+  searchParams: { 
+    page?: string; 
+    search?: string; 
+    category?: string; 
+    sort?: string; 
   };
-}
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-// Composant de pagination séparé pour Suspense
-function Pagination({ 
-  currentPage, 
-  totalPages, 
-  onPageChange 
-}: { 
-  currentPage: number; 
-  totalPages: number; 
-  onPageChange: (page: number) => void; 
 }) {
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="flex justify-center items-center gap-2 mt-8">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        disabled={currentPage === 1}
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" />
-        Précédent
-      </Button>
-      
-      <div className="flex gap-1">
-        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-          let pageNum;
-          if (totalPages <= 5) {
-            pageNum = i + 1;
-          } else if (currentPage <= 3) {
-            pageNum = i + 1;
-          } else if (currentPage >= totalPages - 2) {
-            pageNum = totalPages - 4 + i;
-          } else {
-            pageNum = currentPage - 2 + i;
-          }
-          
-          return (
-            <Button
-              key={pageNum}
-              variant={currentPage === pageNum ? "default" : "outline"}
-              size="sm"
-              onClick={() => onPageChange(pageNum)}
-              className="w-10 h-10"
-            >
-              {pageNum}
-            </Button>
-          );
-        })}
-      </div>
-      
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage === totalPages}
-      >
-        Suivant
-        <ArrowRight className="h-4 w-4 ml-1" />
-      </Button>
-    </div>
-  );
-}
-
-export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
-  const { hasPurchased } = usePurchasedArticles();
-
   const ITEMS_PER_PAGE = 12;
-
-  useEffect(() => {
-    fetchArticles();
-    fetchCategories();
-  }, [currentPage, searchTerm, selectedCategory, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchArticles = async () => {
-    try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: ITEMS_PER_PAGE.toString(),
-        search: searchTerm,
-        category: selectedCategory,
-        sort: sortBy,
-      });
-
-      const response = await fetch(`/api/articles?${params}`);
-      const data = await response.json();
-      
-      setArticles(data.articles || []);
-      setTotalPages(data.totalPages || 1);
-    } catch (error) {
-      console.error('Erreur lors du chargement des articles:', error);
-      setArticles([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des catégories:', error);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  
+  // Récupération des paramètres de recherche
+  const page = parseInt(searchParams.page || '1');
+  const search = searchParams.search || '';
+  const category = searchParams.category || '';
+  const sort = searchParams.sort || 'date';
+  
+  // Calcul de l'offset pour la pagination
+  const skip = (page - 1) * ITEMS_PER_PAGE;
+  
+  // Construction des conditions de recherche
+  const where: any = { isPublished: true }; // eslint-disable-line @typescript-eslint/no-explicit-any
+  
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { excerpt: { contains: search, mode: 'insensitive' } },
+      { content: { contains: search, mode: 'insensitive' } }
+    ];
+  }
+  
+  if (category) {
+    where.categoryIds = { has: category };
+  }
+  
+  // Récupération des articles et catégories côté serveur
+  const [articles, categories, totalCount] = await Promise.all([
+    prisma.article.findMany({
+      where,
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: sort === 'title' 
+        ? { title: 'asc' }
+        : { createdAt: 'desc' },
+      skip,
+      take: ITEMS_PER_PAGE
+    }),
+    prisma.category.findMany({
+      select: { id: true, name: true, slug: true }
+    }),
+    prisma.article.count({ where })
+  ]);
+  
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  
+  // Conversion des dates en string pour la compatibilité
+  const articlesWithStringDates = articles.map(article => ({
+    ...article,
+    createdAt: article.createdAt.toISOString()
+  }));
 
   return (
     <div className="container mx-auto px-4 pb-8">
@@ -193,145 +99,18 @@ export default function ArticlesPage() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Recherche et filtres
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSearch}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Rechercher un article..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </form>
-          
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtrer par :</span>
-            </div>
-            
-            <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Toutes les catégories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value as "date" | "title");
-                setCurrentPage(1);
-              }}
-              className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="date">Plus récents</option>
-              <option value="title">Ordre alphabétique</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
+      <ArticlesSearchFilters 
+        categories={categories}
+        initialSearch={search}
+        initialCategory={category}
+        initialSort={sort}
+      />
 
       {/* Articles Grid */}
-      {loading ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
-            <Card key={i} className="overflow-hidden animate-pulse">
-              <div className="aspect-[16/9] bg-muted" />
-              <CardContent className="p-6 space-y-3">
-                <div className="h-4 bg-muted rounded w-20" />
-                <div className="h-6 bg-muted rounded w-full" />
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : articles && articles.length > 0 ? (
-        <>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {articles.map((article) => (
-            <div key={article.id}>
-              {article.isPremium ? (
-                <div className="h-[500px]">
-                  <PremiumArticleCard
-                    article={{
-                      id: article.id,
-                      title: article.title,
-                      excerpt: article.excerpt || undefined,
-                      slug: article.slug,
-                      imageUrl: article.imageUrl || undefined,
-                      premiumPrice: article.premiumPrice || 0,
-                      isPremium: article.isPremium,
-                    }}
-                    hasPurchased={hasPurchased(article.id)}
-                  />
-                </div>
-              ) : (
-                <ArticleCard article={article} />
-              )}
-            </div>
-          ))}
-        </div>
+      <ArticlesGrid articles={articlesWithStringDates} />
 
-          {/* Pagination */}
-          <Suspense fallback={<div className="h-16 flex items-center justify-center">Chargement...</div>}>
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={handlePageChange} 
-            />
-          </Suspense>
-        </>
-      ) : (
-        <Card>
-          <CardContent className="text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-              <span className="text-3xl">📝</span>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">
-              Aucun article trouvé
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || selectedCategory 
-                ? "Essayez de modifier vos critères de recherche" 
-                : "Aucun article n'est disponible pour le moment"
-              }
-            </p>
-            {(searchTerm || selectedCategory) && (
-              <Button 
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("");
-                  setCurrentPage(1);
-                }}
-                variant="outline"
-              >
-                Effacer les filtres
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Pagination */}
+      <ArticlesPagination currentPage={page} totalPages={totalPages} />
 
       {/* Section SEO */}
       <section className="mt-16 mb-8">
@@ -358,12 +137,18 @@ export default function ArticlesPage() {
 
       {/* Fallback NoScript pour les bots et navigateurs sans JavaScript */}
       <NoScriptFallback 
-        articles={articles}
+        articles={articlesWithStringDates}
         title="Articles TechAnswers - Bibliothèque technique complète"
         description="Explorez notre collection d'articles sur le développement web, la cybersécurité, l'IA et les technologies émergentes. Contenu technique validé par des experts."
         showPagination={true}
-        currentPage={currentPage}
+        currentPage={page}
         totalPages={totalPages}
+        searchParams={{
+          page: page.toString(),
+          ...(search && { search }),
+          ...(category && { category }),
+          ...(sort && { sort })
+        }}
       />
     </div>
   );

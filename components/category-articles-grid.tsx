@@ -1,6 +1,5 @@
 'use client';
 
-import { usePurchasedArticles } from '@/lib/hooks/usePurchasedArticles';
 import PremiumArticleCard from '@/components/premium-article-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +21,7 @@ interface Article {
   user: {
     username: string;
   };
+  hasPurchased?: boolean; // Ajout de la propriété hasPurchased
 }
 
 interface CategoryArticlesGridProps {
@@ -32,26 +32,8 @@ interface CategoryArticlesGridProps {
 }
 
 export default function CategoryArticlesGrid({ articles, totalPages, currentPage, categorySlug }: CategoryArticlesGridProps) {
-  const { hasPurchased, loading } = usePurchasedArticles();
-
-  if (loading) {
-    return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
-        {articles.map((article) => (
-          <div key={article.id} className="animate-pulse">
-            <Card className="h-full">
-              <div className="aspect-[16/9] bg-muted rounded-t-lg" />
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-                <div className="h-3 bg-muted rounded w-full" />
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // Supprimer la dépendance à usePurchasedArticles pour un rendu immédiat
+  // Les articles premium seront gérés côté client si nécessaire
 
   return (
     <>
@@ -70,7 +52,7 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                     premiumPrice: article.premiumPrice || 0,
                     isPremium: article.isPremium,
                   }}
-                  hasPurchased={hasPurchased(article.id)}
+                  hasPurchased={article.hasPurchased || false}
                 />
               </div>
             ) : (
@@ -99,46 +81,50 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                         ⭐ Marketing
                       </Badge>
                     )}
-                    
-                    {/* Badge Article Gratuit */}
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg">
-                        <BookOpen className="w-3 h-3 mr-1" />
-                        Gratuit
-                      </Badge>
-                    </div>
                   </div>
-                  <CardContent className="p-6 flex flex-col h-[236px]">
+                  
+                  <CardContent className="p-6 h-[236px] flex flex-col">
                     <div className="flex items-center gap-2 mb-3">
                       <Badge variant="outline" className="text-xs">
-                        Article
+                        {article.isPremium ? 'Premium' : 'Gratuit'}
                       </Badge>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <User className="h-3 w-3 mr-1" />
-                        {article.user.username}
-                      </div>
+                      {article.isMarketing && (
+                        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                          Marketing
+                        </Badge>
+                      )}
                     </div>
                     
-                    <h3 className="text-lg font-semibold leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {article.title}
                     </h3>
                     
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-1">
-                      {article.excerpt || "Aucun résumé disponible"}
-                    </p>
+                    {article.excerpt && (
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-1">
+                        {article.excerpt}
+                      </p>
+                    )}
                     
-                    <div className="flex items-center text-xs text-muted-foreground mt-auto">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(article.createdAt).toLocaleDateString('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          <span>{article.user.username}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(article.createdAt).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          Cliquez pour lire
+                        </span>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      </div>
                     </div>
                   </CardContent>
-                  
-                  {/* Accent décoratif */}
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
                 </Card>
               </Link>
             )}
@@ -148,7 +134,7 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex items-center justify-center gap-2 mb-12">
           {currentPage > 1 && (
             <Link href={`/categories/${categorySlug}?page=${currentPage - 1}`}>
               <Button variant="outline" size="sm">

@@ -1,7 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { usePurchasedArticles } from "@/lib/hooks/usePurchasedArticles";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,74 +7,31 @@ import PremiumArticleCard from "@/components/premium-article-card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star } from "lucide-react";
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  _count: {
-    articles: number;
-  };
-}
-
-interface Article {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  imageUrl: string | null;
-  readingTime: number;
-  createdAt: string;
-  isPremium: boolean;
-  premiumPrice: number;
-  user: {
-    username: string;
-  };
-  category: {
-    name: string;
-    slug: string;
-  };
-  _count: {
-    ratings: number;
-  };
-  averageRating: number;
-}
-
-export default function CategoriesPage() {
-  const { hasPurchased } = usePurchasedArticles();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [marketingArticles, setMarketingArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [marketingLoading, setMarketingLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCategories();
-    fetchMarketingArticles();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories/with-count');
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des catégories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMarketingArticles = async () => {
-    try {
-      const response = await fetch('/api/articles?isMarketing=true&limit=3');
-      const data = await response.json();
-      setMarketingArticles(data.articles || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des articles marketing:', error);
-    } finally {
-      setMarketingLoading(false);
-    }
-  };
+export default async function CategoriesPage() {
+  // Récupération des catégories et articles marketing côté serveur
+  const [categories, marketingArticles] = await Promise.all([
+    prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true
+      }
+    }),
+    prisma.article.findMany({
+      where: { 
+        isPublished: true,
+        isMarketing: true 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 3
+    })
+  ]);
 
   const getCategoryIcon = (name: string) => {
     const iconClass = "w-8 h-8";
@@ -125,7 +79,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Articles Marketing Section */}
-        {!marketingLoading && marketingArticles.length > 0 && (
+        {marketingArticles.length > 0 && (
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-8">
               <div className="flex items-center gap-2">
@@ -149,16 +103,28 @@ export default function CategoriesPage() {
                     <div className="h-[500px]">
                       <PremiumArticleCard 
                         article={{
-                          ...article,
+                          id: article.id,
+                          title: article.title,
+                          excerpt: article.excerpt || undefined,
+                          slug: article.slug,
                           imageUrl: article.imageUrl || undefined,
-                          excerpt: article.excerpt || undefined
+                          premiumPrice: article.premiumPrice || 0,
+                          isPremium: article.isPremium
                         }}
-                        hasPurchased={hasPurchased(article.id)}
+                        hasPurchased={false}
                       />
                     </div>
                   ) : (
                     <ArticleCard 
-                      article={article}
+                      article={{
+                        id: article.id,
+                        title: article.title,
+                        excerpt: article.excerpt,
+                        slug: article.slug,
+                        imageUrl: article.imageUrl,
+                        createdAt: article.createdAt.toISOString(),
+                        user: article.user
+                      }}
                     />
                   )}
                 </div>
@@ -182,20 +148,7 @@ export default function CategoriesPage() {
             <Badge variant="outline">{categories.length} catégories</Badge>
           </div>
 
-          {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Card key={i} className="h-40 animate-pulse">
-                  <CardContent className="p-6 space-y-3">
-                    <div className="h-8 w-8 bg-muted rounded-lg" />
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-3 bg-muted rounded w-full" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : categories.length > 0 ? (
+          {categories.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {categories.map((category) => (
                 <Link key={category.id} href={`/categories/${category.slug}`}>
@@ -211,7 +164,7 @@ export default function CategoriesPage() {
                               {category.name}
                             </h3>
                             <Badge variant="outline" className="ml-2 flex-shrink-0">
-                              {category._count.articles}
+                              Articles
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground line-clamp-2">

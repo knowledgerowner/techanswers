@@ -27,6 +27,7 @@ interface NoScriptFallbackProps {
   showPagination?: boolean;
   currentPage?: number;
   totalPages?: number;
+  searchParams?: Record<string, string>;
 }
 
 export default function NoScriptFallback({ 
@@ -35,7 +36,8 @@ export default function NoScriptFallback({
   description = "Découvrez nos articles techniques sur le développement web, la cybersécurité et l'intelligence artificielle",
   showPagination = false,
   currentPage = 1,
-  totalPages = 1
+  totalPages = 1,
+  searchParams = {}
 }: NoScriptFallbackProps) {
   return (
     <noscript>
@@ -145,52 +147,65 @@ export default function NoScriptFallback({
         {/* Pagination statique */}
         {showPagination && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-8">
-            {currentPage > 1 && (
-              <Link 
-                href={`?page=${currentPage - 1}`}
-                className="px-4 py-2 border border-input bg-background rounded-md text-sm hover:bg-accent transition-colors"
-              >
-                ← Précédent
-              </Link>
-            )}
-            
-            <div className="flex gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <Link
-                    key={pageNum}
-                    href={`?page=${pageNum}`}
-                    className={`px-3 py-2 rounded-md text-sm transition-colors ${
-                      currentPage === pageNum 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'border border-input bg-background hover:bg-accent'
-                    }`}
-                  >
-                    {pageNum}
-                  </Link>
-                );
-              })}
-            </div>
-            
-            {currentPage < totalPages && (
-              <Link 
-                href={`?page=${currentPage + 1}`}
-                className="px-4 py-2 border border-input bg-background rounded-md text-sm hover:bg-accent transition-colors"
-              >
-                Suivant →
-              </Link>
-            )}
+            {/* Fonction helper pour construire les URLs avec tous les paramètres */}
+            {(() => {
+              const buildPageUrl = (page: number) => {
+                const params = new URLSearchParams(searchParams || {});
+                params.set('page', page.toString());
+                return `?${params.toString()}`;
+              };
+              
+              return (
+                <>
+                  {currentPage > 1 && (
+                    <Link 
+                      href={buildPageUrl(currentPage - 1)}
+                      className="px-4 py-2 border border-input bg-background rounded-md text-sm hover:bg-accent transition-colors"
+                    >
+                      ← Précédent
+                    </Link>
+                  )}
+                  
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Link
+                          key={pageNum}
+                          href={buildPageUrl(pageNum)}
+                          className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                            currentPage === pageNum 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'border border-input bg-background hover:bg-accent'
+                          }`}
+                        >
+                          {pageNum}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  
+                  {currentPage < totalPages && (
+                    <Link 
+                      href={buildPageUrl(currentPage + 1)}
+                      className="px-4 py-2 border border-input bg-background rounded-md text-sm hover:bg-accent transition-colors"
+                    >
+                      Suivant →
+                    </Link>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
