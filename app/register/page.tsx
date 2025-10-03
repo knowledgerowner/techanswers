@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
-                Nom d'utilisateur
+                Nom d&apos;utilisateur
               </label>
               <Input
                 id="username"

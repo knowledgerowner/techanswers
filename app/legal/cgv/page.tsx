@@ -34,7 +34,7 @@ export default function CGVPage() {
             <p><strong>Article Premium :</strong> Contenu numérique payant accessible après achat ou backlink</p>
           </div>
           <div className="border border-muted rounded p-3">
-            <p><strong>Site :</strong> Site web accessible à l'adresse <Link href="https://www.oxelya.com" className="text-blue-600 hover:underline">oxelya.com</Link></p>
+            <p><strong>Site :</strong> Site web accessible à l&apos;adresse <Link href="https://www.oxelya.com" className="text-blue-600 hover:underline">oxelya.com</Link></p>
           </div>
         </div>
       </section>
@@ -88,11 +88,11 @@ export default function CGVPage() {
           <p className="font-medium mb-2">📢 Conformité légale</p>
           <p className="text-sm">
             Conformément à la loi sur la confiance dans l&apos;économie numérique et aux recommandations de l&apos;ARPP, 
-            tous les contenus sponsorisés sont clairement identifiés comme tels (mentions "Sponsorisé", "Publireportage", "Partenariat").
+            tous les contenus sponsorisés sont clairement identifiés comme tels (mentions &quot;Sponsorisé&quot;, &quot;Publireportage&quot;, &quot;Partenariat&quot;).
           </p>
         </div>
         <ul className="list-disc list-inside space-y-2 mb-4">
-          <li>Mention obligatoire "Article sponsorisé" ou "Publireportage"</li>
+          <li>Mention obligatoire &quot;Article sponsorisé&quot; ou &quot;Publireportage&quot;</li>
           <li>Identification claire du partenaire commercial</li>
           <li>Respect de l&apos;indépendance éditoriale</li>
           <li>Contenu de qualité maintenu malgré le caractère commercial</li>
@@ -129,7 +129,7 @@ export default function CGVPage() {
           </div>
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</div>
-            <p>Rédaction et publication de l'article</p>
+            <p>Rédaction et publication de l&apos;article</p>
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export default function CGVPage() {
             <li>Respect de la ligne éditoriale technique du site</li>
             <li>Contenu de qualité et informatif obligatoire</li>
             <li>Refus des contenus purement promotionnels</li>
-            <li>Validation finale par l'équipe éditoriale</li>
+            <li>Validation finale par l&apos;équipe éditoriale</li>
             <li>Droit de modification pour respecter le style maison</li>
           </ul>
         </div>
@@ -181,7 +181,7 @@ export default function CGVPage() {
         </div>
 
         <h3 className="text-xl font-semibold mb-3">5.2 Modalités de paiement</h3>
-        <p className="mb-4">Le paiement s'effectue par carte bancaire via notre partenaire sécurisé Stripe pour les articles Premium. Les paiements sont effectués en euros (€) :</p>
+        <p className="mb-4">Le paiement s&apos;effectue par carte bancaire via notre partenaire sécurisé Stripe pour les articles Premium. Les paiements sont effectués en euros (€) :</p>
         <ul className="list-disc list-inside space-y-2">
           <li>Visa, Mastercard, American Express</li>
           <li>Paiement immédiat et sécurisé</li>
@@ -197,7 +197,7 @@ export default function CGVPage() {
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-            <p>Sélection de l'article premium</p>
+            <p>Sélection de l&apos;article premium</p>
           </div>
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
@@ -245,10 +245,10 @@ export default function CGVPage() {
         </p>
 
         <h3 className="text-xl font-semibold mb-3 mt-6">6.1 Exceptions</h3>
-        <p>Le droit de rétractation peut s'appliquer dans les cas suivants :</p>
+        <p>Le droit de rétractation peut s&apos;appliquer dans les cas suivants :</p>
         <ul className="list-disc list-inside space-y-2 mt-4">
           <li>Défaut de conformité du contenu</li>
-          <li>Impossibilité technique d'accès au contenu</li>
+          <li>Impossibilité technique d&apos;accès au contenu</li>
           <li>Erreur manifeste dans la description du produit</li>
         </ul>
       </section>
@@ -261,7 +261,7 @@ export default function CGVPage() {
         <ul className="list-disc list-inside space-y-2 mb-4">
           <li>La conformité du contenu à sa description</li>
           <li>L&apos;accessibilité technique du contenu</li>
-          <li>La qualité et l'exactitude des informations</li>
+          <li>La qualité et l&apos;exactitude des informations</li>
           <li>La sécurité des transactions</li>
         </ul>
 

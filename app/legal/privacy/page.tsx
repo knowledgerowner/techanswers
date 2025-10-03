@@ -165,7 +165,7 @@ export default function PrivacyPage() {
         
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="border border-muted rounded-lg p-4">
-            <h4 className="font-semibold mb-2">🔍 Droit d'accès</h4>
+            <h4 className="font-semibold mb-2">🔍 Droit d&apos;accès</h4>
             <p className="text-sm">Obtenir une copie de vos données personnelles</p>
           </div>
           
@@ -175,7 +175,7 @@ export default function PrivacyPage() {
           </div>
           
           <div className="border border-muted rounded-lg p-4">
-            <h4 className="font-semibold mb-2">🗑️ Droit d'effacement</h4>
+            <h4 className="font-semibold mb-2">🗑️ Droit d&apos;effacement</h4>
             <p className="text-sm">Demander la suppression de vos données</p>
           </div>
           
@@ -190,7 +190,7 @@ export default function PrivacyPage() {
           </div>
           
           <div className="border border-muted rounded-lg p-4">
-            <h4 className="font-semibold mb-2">❌ Droit d'opposition</h4>
+            <h4 className="font-semibold mb-2">❌ Droit d&apos;opposition</h4>
             <p className="text-sm">Vous opposer au traitement de vos données</p>
           </div>
         </div>

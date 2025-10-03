@@ -19,7 +19,7 @@ export default function TermsPage() {
           <p><strong>Raison sociale :</strong> Oxelya</p>
           <p><strong>Forme juridique :</strong> Micro-entreprise</p>
           <p><strong>SIRET :</strong> 989 337 670 00016</p>
-          <p><strong>Code APE :</strong> 4741Z - Commerce de détail d'ordinateurs, d'unités périphériques et de logiciels en magasin spécialisé</p>
+          <p><strong>Code APE :</strong> 4741Z - Commerce de détail d&apos;ordinateurs, d&apos;unités périphériques et de logiciels en magasin spécialisé</p>
           <p><strong>N° TVA intracommunautaire :</strong> FR989337670</p>
         </div>
       </section>
@@ -72,7 +72,7 @@ export default function TermsPage() {
         <p>
           Oxelya s&apos;efforce de fournir sur le site des informations aussi précises que possible. 
           Toutefois, elle ne pourra être tenue responsable des omissions, des inexactitudes et des carences 
-          dans la mise à jour, qu'elles soient de son fait ou du fait des tiers partenaires qui lui 
+          dans la mise à jour, qu&apos;elles soient de son fait ou du fait des tiers partenaires qui lui 
           fournissent ces informations.
         </p>
         <p className="mt-4">
@@ -83,13 +83,13 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">7. Liens hypertextes</h2>
         <p>
-          Le site peut contenir des liens hypertextes vers d'autres sites présents sur le réseau Internet. 
+          Le site peut contenir des liens hypertextes vers d&apos;autres sites présents sur le réseau Internet. 
           Oxelya ne dispose d&apos;aucun moyen pour contrôler le contenu de ces sites et décline 
           toute responsabilité quant à leur contenu.
         </p>
         <p className="mt-4">
           L&apos;existence d&apos;un lien depuis le site vers un autre site ne constitue pas une validation de ce site 
-          ou de son contenu. Il appartient à l'internaute d'utiliser ces informations avec discernement et 
+          ou de son contenu. Il appartient à l&apos;internaute d&apos;utiliser ces informations avec discernement et 
           esprit critique.
         </p>
       </section>
