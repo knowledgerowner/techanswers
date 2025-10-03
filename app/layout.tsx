@@ -153,6 +153,8 @@ export default function RootLayout({
             }}
           />
 
+          <script src="https://analytics.ahrefs.com/analytics.js" data-key="79ndNsuY8hQvaVJ9s0iYZg" async></script>
+
           {/* JSON-LD pour le site web */}
           <script
             type="application/ld+json"

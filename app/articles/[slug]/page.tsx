@@ -50,6 +50,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     },
   });
 
+  if (!article || !article.isPublished) {
+    notFound();
+  }
+
+  // Récupérer les catégories de l'article
+  const categories = article.categoryIds.length > 0 
+    ? await prisma.category.findMany({
+        where: {
+          id: {
+            in: article.categoryIds
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true
+        }
+      })
+    : [];
+
   // Récupérer tous les articles publiés pour la navigation
   const allArticles = await prisma.article.findMany({
     where: { isPublished: true },
@@ -61,6 +81,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       imageUrl: true,
       isPremium: true,
       createdAt: true,
+      categoryIds: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -75,10 +96,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   
   const nextArticles = allArticles
     .slice(currentIndex + 1, Math.min(allArticles.length, currentIndex + 4));
-
-  if (!article || !article.isPublished) {
-    notFound();
-  }
 
   // Calculer la note moyenne
   const averageRating = article.ratings.length > 0
@@ -112,6 +129,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               isPremium: article.isPremium,
               createdAt: article.createdAt,
               categoryIds: article.categoryIds,
+              categories: categories, // Ajouter les catégories
               user: article.user,
               comments: article.comments,
               ratings: article.ratings,
@@ -152,16 +170,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         {/* En-tête de l'article */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            {article.categoryIds.map((categoryId) => (
-              <Badge key={categoryId} variant="outline">
-                {categoryId}
-              </Badge>
-            ))}
+            {categories.length > 0 ? (
+              categories.map((category) => (
+                <Link key={category.id} href={`/categories/${category.slug}`}>
+                  <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">
+                    {category.name}
+                  </Badge>
+                </Link>
+              ))
+            ) : (
+              article.categoryIds.map((categoryId) => (
+                <Badge key={categoryId} variant="outline">
+                  {categoryId}
+                </Badge>
+              ))
+            )}
           </div>
           
-          <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+          <h1 className="text-4xl font-bold mb-4 text-center md:text-left">{article.title}</h1>
           
-          <div className="flex items-center gap-6 text-muted-foreground mb-6">
+          <div className="flex flex-wrap gap-6 text-muted-foreground mb-6 justify-center md:justify-start">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>{article.user.username}</span>

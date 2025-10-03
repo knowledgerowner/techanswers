@@ -46,47 +46,49 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-hidden">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Mon Profil</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Mon Profil</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Gérez vos informations personnelles et vos préférences
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Informations principales */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Carte d'identité */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <div>
-                <CardTitle className="text-xl">Informations personnelles</CardTitle>
-                <CardDescription>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-4">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-lg sm:text-xl">Informations personnelles</CardTitle>
+                <CardDescription className="text-sm">
                   Vos informations de base et votre statut
                 </CardDescription>
               </div>
-              <Link href="/profile/settings">
-                <Button variant="outline" size="sm">
+              <Link href="/profile/settings" className="shrink-0">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Edit className="mr-2 h-4 w-4" />
                   Modifier
                 </Button>
               </Link>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <Avatar className="h-16 w-16 sm:h-20 sm:w-20 mx-auto sm:mx-0 shrink-0">
+                  <AvatarFallback className="text-xl sm:text-2xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                     {user.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-2xl font-semibold">{user.username}</h3>
-                    {getRoleBadge()}
+                <div className="space-y-2 text-center sm:text-left min-w-0 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                    <h3 className="text-xl sm:text-2xl font-semibold truncate">{user.username}</h3>
+                    <div className="shrink-0">
+                      {getRoleBadge()}
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Membre depuis {formatDate(user.createdAt)}
                   </p>
                 </div>
@@ -94,19 +96,20 @@ export default function ProfilePage() {
 
               <Separator />
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="flex items-center space-x-3">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                  <div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start space-x-3 min-w-0">
+                  <Mail className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">Email</p>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground truncate">
                         {showEmail ? user.email : '••••••••@••••••••'}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowEmail(!showEmail)}
+                        className="shrink-0"
                       >
                         {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -114,9 +117,9 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <div>
+                <div className="flex items-start space-x-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">Date d&apos;inscription</p>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(user.createdAt)}
@@ -124,9 +127,9 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-muted-foreground" />
-                  <div>
+                <div className="flex items-start space-x-3">
+                  <Shield className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">Statut du compte</p>
                     <p className="text-sm text-muted-foreground">
                       Actif
@@ -134,9 +137,9 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <Crown className="h-5 w-5 text-muted-foreground" />
-                  <div>
+                <div className="flex items-start space-x-3">
+                  <Crown className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">Rôle</p>
                     <p className="text-sm text-muted-foreground">
                       {user.isSuperAdmin ? 'Super Administrateur' : 
@@ -151,13 +154,13 @@ export default function ProfilePage() {
           {/* Statistiques */}
           <Card>
             <CardHeader>
-              <CardTitle>Statistiques</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Statistiques</CardTitle>
+              <CardDescription className="text-sm">
                 Votre activité sur TechAnswers
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">0</div>
                   <p className="text-sm text-muted-foreground">Articles lus</p>
@@ -176,29 +179,29 @@ export default function ProfilePage() {
         </div>
 
         {/* Sidebar droite */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Actions rapides */}
           <Card>
             <CardHeader>
-              <CardTitle>Actions rapides</CardTitle>
+              <CardTitle className="text-lg">Actions rapides</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-3">
               <Link href="/profile/settings" className="w-full">
-                <Button variant="outline" className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" />
-                  Modifier le profil
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <User className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">Modifier le profil</span>
                 </Button>
               </Link>
               <Link href="/profile/security" className="w-full">
-                <Button variant="outline" className="w-full justify-start">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Sécurité
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <Shield className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">Sécurité</span>
                 </Button>
               </Link>
               <Link href="/profile/notifications" className="w-full">
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Notifications
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <Mail className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">Notifications</span>
                 </Button>
               </Link>
             </CardContent>
@@ -209,22 +212,22 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg">Sécurité</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Authentification 2FA</span>
-                <Badge variant={user.twoFactorEnabled ? "default" : "outline"}>
+                <span className="text-sm min-w-0 flex-1 pr-2">Authentification 2FA</span>
+                <Badge variant={user.twoFactorEnabled ? "default" : "outline"} className="shrink-0 text-xs">
                   {user.twoFactorEnabled ? "Activée" : "Non activée"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Email vérifié</span>
-                <Badge variant={user.isEmailVerified ? "default" : "outline"}>
+                <span className="text-sm min-w-0 flex-1 pr-2">Email vérifié</span>
+                <Badge variant={user.isEmailVerified ? "default" : "outline"} className="shrink-0 text-xs">
                   {user.isEmailVerified ? "Vérifié" : "Non vérifié"}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Dernière connexion</span>
-                <span className="text-xs text-muted-foreground">
+              <div className="flex items-start justify-between">
+                <span className="text-sm min-w-0 flex-1 pr-2">Dernière connexion</span>
+                <span className="text-xs text-muted-foreground shrink-0 text-right">
                   {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Jamais'}
                 </span>
               </div>
@@ -236,16 +239,16 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg">Besoin d&apos;aide ?</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-3">
               <Link href="/contact" className="w-full">
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Contacter le support
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <Mail className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">Contacter le support</span>
                 </Button>
               </Link>
               <Link href="/about" className="w-full">
-                <Button variant="outline" className="w-full justify-start">
-                  À propos de TechAnswers
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <span className="truncate">À propos de TechAnswers</span>
                 </Button>
               </Link>
             </CardContent>

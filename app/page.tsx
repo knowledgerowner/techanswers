@@ -190,12 +190,6 @@ export default async function Home() {
             </p>
             <NewsletterForm />
           </div>
-          <div className="relative h-40 md:h-auto">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-40 rounded-full bg-chart-1/20" />
-              <div className="absolute size-24 rounded-full bg-chart-3/20" />
-            </div>
-          </div>
         </div>
       </section>
       
@@ -224,7 +218,7 @@ export default async function Home() {
       </section>
 
       {/* SEO Content */}
-      <section className="mt-16 mb-8">
+      <section className="mt-16 mb-8 text-center">
         <div className="prose prose-invert max-w-none">
           <h2 className="text-2xl font-semibold mb-6">TechAnswers - Votre source d&apos;informations technologiques</h2>
           <p className="text-muted-foreground mb-4">

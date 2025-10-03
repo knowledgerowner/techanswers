@@ -211,7 +211,7 @@ export default function SettingsPage() {
 
               {/* Informations de base */}
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="firstName">Prénom</Label>
                   <Input
                     id="firstName"
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                     placeholder="Votre prénom"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="lastName">Nom</Label>
                   <Input
                     id="lastName"
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                     placeholder="Votre nom"
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div className="flex flex-col gap-2 md:col-span-2">
                   <Label htmlFor="bio">Biographie</Label>
                   <Textarea
                     id="bio"
@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
               {/* Informations professionnelles */}
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="company">Entreprise</Label>
                   <Input
                     id="company"
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                     placeholder="Nom de votre entreprise"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="jobTitle">Poste</Label>
                   <Input
                     id="jobTitle"
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     placeholder="Votre poste actuel"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="website">Site web</Label>
                   <Input
                     id="website"
@@ -271,7 +271,7 @@ export default function SettingsPage() {
                     type="url"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="location">Localisation</Label>
                   <Input
                     id="location"
@@ -300,8 +300,8 @@ export default function SettingsPage() {
                 Modifiez votre mot de passe pour sécuriser votre compte
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="currentPassword">Mot de passe actuel</Label>
                 <div className="relative">
                   <Input
@@ -324,7 +324,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="newPassword">Nouveau mot de passe</Label>
                   <Input
                     id="newPassword"
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                     placeholder="Nouveau mot de passe"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
                   <Input
                     id="confirmPassword"
@@ -369,7 +369,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="text-lg">Statut du compte</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Email vérifié</span>
                 <Badge variant={user.isEmailVerified ? "default" : "outline"}>

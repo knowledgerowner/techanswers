@@ -114,7 +114,7 @@ export default async function ArticlesPage({
       <ArticlesPagination currentPage={page} totalPages={totalPages} />
 
       {/* Section SEO */}
-      <section className="mt-16 mb-8">
+      <section className="mt-16 mb-8 text-center">
         <div className="prose prose-invert max-w-none">
           <h2 className="text-2xl font-semibold mb-6">TechAnswers - Votre source d&apos;articles techniques de qualité</h2>
           <p className="text-muted-foreground mb-4">
