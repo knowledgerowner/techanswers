@@ -36,11 +36,11 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
+      <div className="grid gap-6 grid-cols-2 lg:grid-cols-3 mb-12">
         {articles.map((article) => (
           <div key={article.id}>
             {article.isPremium ? (
-              <div className="h-[500px]">
+              <div className="h-[400px] sm:h-[450px] lg:h-[500px]">
                 <PremiumArticleCard
                   article={{
                     id: article.id,
@@ -56,8 +56,8 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
               </div>
             ) : (
               <Link href={`/articles/${article.slug}`}>
-                <Card className="h-[500px] group overflow-hidden transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 relative">
-                  <div className="relative h-64 overflow-hidden bg-muted">
+                <Card className="h-[400px] sm:h-[450px] lg:h-[500px] group overflow-hidden transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 relative">
+                  <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden bg-muted">
                     {article.imageUrl ? (
                       <Image 
                         src={article.imageUrl} 
@@ -68,59 +68,55 @@ export default function CategoryArticlesGrid({ articles, totalPages, currentPage
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="text-center">
-                          <div className="w-16 h-16 mx-auto mb-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
-                            <BookOpen className="w-8 h-8 text-white" />
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+                            <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                           </div>
-                          <p className="text-sm text-muted-foreground">Article technique</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground font-medium">Article</p>
                         </div>
                       </div>
                     )}
-                    {article.isMarketing && (
-                      <Badge className="absolute top-3 left-3 bg-yellow-500 hover:bg-yellow-600">
-                        ⭐ Marketing
+                    
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg font-medium text-xs sm:text-sm">
+                        <BookOpen className="w-3 h-3 mr-1" />
+                        Gratuit
                       </Badge>
-                    )}
+                    </div>
                   </div>
-                  
-                  <CardContent className="p-6 h-[236px] flex flex-col">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline" className="text-xs">
-                        {article.isPremium ? 'Premium' : 'Gratuit'}
-                      </Badge>
-                      {article.isMarketing && (
-                        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
-                          Marketing
-                        </Badge>
-                      )}
+
+                  <CardContent className="p-4 sm:p-6 flex flex-col h-[152px] sm:h-[194px] lg:h-[236px]">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="truncate">{article.user.username}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">{article.createdAt.toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'short',
+                          year: 'numeric'
+                        })}</span>
+                        <span className="sm:hidden">{article.createdAt.toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'short'
+                        })}</span>
+                      </div>
                     </div>
                     
-                    <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg sm:text-xl font-bold mb-3 text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                       {article.title}
                     </h3>
                     
-                    {article.excerpt && (
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-1">
-                        {article.excerpt}
-                      </p>
-                    )}
-                    
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                        <div className="flex items-center gap-1">
-                          <User className="w-4 h-4" />
-                          <span>{article.user.username}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{new Date(article.createdAt).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          Cliquez pour lire
-                        </span>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    {/* Extrait - caché sur mobile */}
+                    <p className="hidden sm:block text-muted-foreground text-sm leading-relaxed line-clamp-3 flex-1">
+                      {article.excerpt || "Découvrez ce contenu technique gratuit et enrichissez vos connaissances."}
+                    </p>
+
+                    {/* Footer - affiché seulement sur desktop quand il y a l'extrait */}
+                    <div className="hidden sm:flex items-center justify-end pt-4 mt-auto">
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <ArrowRight className="w-4 h-4 text-white" />
                       </div>
                     </div>
                   </CardContent>

@@ -228,6 +228,13 @@ export default function Navigation() {
                   >
                     Contact
                   </Link>
+                  <Link 
+                    href="/profile" 
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Mon Profil
+                  </Link>
                   
                   <div className="pt-4 border-t">
                     {!isLoading && (

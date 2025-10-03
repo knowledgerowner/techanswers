@@ -32,7 +32,7 @@ export default function HomeArticlesWrapper({ articles, title, description, maxI
   const displayArticles = maxItems ? articles.slice(0, maxItems) : articles;
 
   return (
-    <section className="mt-16 w-full max-w-80/100 mx-auto">
+    <section className="mt-16 w-full md:max-w-80/100 mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold tracking-tight mb-4">
           {title}
@@ -43,11 +43,11 @@ export default function HomeArticlesWrapper({ articles, title, description, maxI
       </div>
       
       {displayArticles.length > 0 ? (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 grid-cols-2 lg:grid-cols-3">
           {displayArticles.map((article) => (
             <div key={article.id}>
               {article.isPremium ? (
-                <div className="h-[500px]">
+                <div className="h-[400px] sm:h-[450px] lg:h-[500px]">
                   <PremiumArticleCard
                     article={{
                       id: article.id,

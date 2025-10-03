@@ -30,6 +30,11 @@ interface PremiumArticleContentProps {
     isPremium: boolean;
     createdAt: Date;
     categoryIds: string[];
+    categories?: Array<{
+      id: string;
+      name: string;
+      slug: string;
+    }>;
     user: {
       username: string;
     };
@@ -256,11 +261,21 @@ export default function PremiumArticleContent({
         {/* En-tête de l'article */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            {article.categoryIds.map((categoryId) => (
-              <Badge key={categoryId} variant="outline">
-                {categoryId}
-              </Badge>
-            ))}
+            {article.categories && article.categories.length > 0 ? (
+              article.categories.map((category) => (
+                <Link key={category.id} href={`/categories/${category.slug}`}>
+                  <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">
+                    {category.name}
+                  </Badge>
+                </Link>
+              ))
+            ) : (
+              article.categoryIds.map((categoryId) => (
+                <Badge key={categoryId} variant="outline">
+                  {categoryId}
+                </Badge>
+              ))
+            )}
           </div>
           
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>

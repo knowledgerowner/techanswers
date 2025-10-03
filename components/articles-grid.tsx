@@ -36,11 +36,11 @@ export default function ArticlesGrid({ articles }: ArticlesGridProps) {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-8 grid-cols-2 lg:grid-cols-3">
       {articles.map((article) => (
         <div key={article.id}>
           {article.isPremium ? (
-            <div className="h-[500px]">
+            <div className="h-[400px] sm:h-[450px] lg:h-[500px]">
               <PremiumArticleCard
                 article={{
                   id: article.id,
@@ -55,15 +55,17 @@ export default function ArticlesGrid({ articles }: ArticlesGridProps) {
               />
             </div>
           ) : (
-            <ArticleCard article={{
-              id: article.id,
-              title: article.title,
-              excerpt: article.excerpt,
-              slug: article.slug,
-              imageUrl: article.imageUrl,
-              createdAt: article.createdAt,
-              user: article.user,
-            }} />
+            <ArticleCard
+              article={{
+                id: article.id,
+                title: article.title,
+                excerpt: article.excerpt,
+                slug: article.slug,
+                imageUrl: article.imageUrl,
+                createdAt: article.createdAt,
+                user: article.user,
+              }}
+            />
           )}
         </div>
       ))}

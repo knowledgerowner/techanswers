@@ -7,10 +7,10 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="border-t mt-16">
+    <footer className="border-t mt-16 text-center md:text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-center md:justify-start">
             <Image src="/Logo.png" alt="TechAnswers" width={64} height={64} className="rounded-lg bg-transparent overflow-hidden"/>
             <span className="font-semibold tracking-tight">TechAnswers</span>
           </div>
@@ -44,7 +44,14 @@ export default function Footer() {
           </form>
         </div>
       </div>
+      <div className="mx-auto max-w-80/100 h-[1px] bg-gray-800"></div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-muted-foreground flex gap-4 justify-center">
+        <Link href="/legal/terms" className="hover:text-foreground">Mentions légales</Link>
+        <Link href="/legal/privacy" className="hover:text-foreground">Politique de confidentialité</Link>
+        <Link href="/legal/cgv" className="hover:text-foreground">Conditions générales de vente</Link>
+      </div>
       <div className="mx-auto max-w-7xl h-[1px] bg-gray-800"></div>
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-muted-foreground">
         <Link href="https://www.oxelya.com" className="hover:text-foreground">Made By Oxelya</Link>
       </div>
